@@ -1,0 +1,7 @@
+data/sm.puri.Stream.desktop.in
+data/sm.puri.Stream.appdata.xml.in
+data/sm.puri.Stream.gschema.xml
+src/window.ui
+src/main.py
+src/window.py
+
