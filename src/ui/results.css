@@ -1,0 +1,26 @@
+.results {
+  border: 1px solid gray;
+  margin: 6px;
+  padding: 6px;
+  padding-bottom: 12px;
+  border-radius: 8px;
+  border-bottom-width: 1px;
+  transition: 250ms all linear;
+  background-color: white;
+}
+
+.videoframe {
+  border: 1px solid black;
+}
+
+button.rounded-button {
+  padding: 4px;
+  border-radius: 9999px;
+  -gtk-outline-radius: 9999px;
+  min-width: 24px;
+  min-height: 24px;
+}
+
+button.large {
+  padding: 12px;
+}

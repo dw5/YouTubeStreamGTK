@@ -59,3 +59,11 @@ class StreamWindow(Handy.ApplicationWindow):
         self.search_button.connect("clicked", self.search_button_cb)
         self.search_entry.connect("changed", self.search_entry_cb, self.search_entry)
 
+
+    def play_button(self, button):
+        logging.error('play_button')
+        print("play_button it!")
+
+    def pause_button(self, button):
+        logging.error('pause_button')
+        print("pause_button it!")
