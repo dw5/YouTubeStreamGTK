@@ -2,7 +2,7 @@
 <!-- Generated with glade 3.38.2 -->
 <interface>
   <requires lib="gtk+" version="3.20"/>
-  <object class="GtkAdjustment" id="duration">
+  <object class="GtkAdjustment" id="slider-duration">
     <property name="upper">100</property>
     <property name="step-increment">1</property>
     <property name="page-increment">10</property>
@@ -12,8 +12,8 @@
     <property name="can-focus">False</property>
     <property name="halign">center</property>
     <property name="valign">start</property>
-    <property name="margin-start">6</property>
-    <property name="margin-end">6</property>
+    <property name="margin-start">4</property>
+    <property name="margin-end">4</property>
     <property name="margin-top">6</property>
     <property name="margin-bottom">6</property>
     <property name="orientation">vertical</property>
@@ -26,19 +26,30 @@
         <property name="halign">center</property>
         <property name="valign">center</property>
         <child>
-          <object class="GtkImage">
-            <property name="width-request">322</property>
+          <object class="GtkBox" id="player_box">
+            <property name="width-request">332</property>
             <property name="height-request">186</property>
             <property name="visible">True</property>
             <property name="can-focus">False</property>
             <property name="halign">center</property>
             <property name="valign">center</property>
-            <property name="hexpand">True</property>
-            <property name="vexpand">True</property>
-            <property name="resource">/sm/puri/Stream/ui/video-placeholder-332x186.png</property>
-            <style>
-              <class name="videoframe"/>
-            </style>
+            <property name="hexpand">False</property>
+            <property name="vexpand">False</property>
+            <property name="orientation">vertical</property>
+            <child>
+              <object class="GtkImage" id="poster_image">
+                <property name="width-request">332</property>
+                <property name="height-request">186</property>
+                <property name="visible">True</property>
+                <property name="can-focus">False</property>
+                <property name="icon-name">video-x-generic</property>
+              </object>
+              <packing>
+                <property name="expand">False</property>
+                <property name="fill">True</property>
+                <property name="position">0</property>
+              </packing>
+            </child>
           </object>
           <packing>
             <property name="index">-1</property>
@@ -275,15 +286,18 @@
               </packing>
             </child>
             <child>
-              <object class="GtkScale">
+              <object class="GtkScale" id="slider">
                 <property name="visible">True</property>
+                <property name="sensitive">False</property>
                 <property name="can-focus">True</property>
                 <property name="margin-top">6</property>
                 <property name="margin-bottom">6</property>
-                <property name="adjustment">duration</property>
+                <property name="adjustment">slider-duration</property>
                 <property name="show-fill-level">True</property>
                 <property name="round-digits">1</property>
                 <property name="draw-value">False</property>
+                <property name="has-origin">False</property>
+                <signal name="value-changed" handler="seek_slider" swapped="no"/>
               </object>
               <packing>
                 <property name="expand">False</property>
@@ -304,33 +318,32 @@
       <object class="GtkBox" id="details">
         <property name="visible">True</property>
         <property name="can-focus">False</property>
+        <property name="margin-start">6</property>
+        <property name="margin-end">6</property>
+        <property name="orientation">vertical</property>
+        <child>
+          <object class="GtkLabel" id="title">
+            <property name="visible">True</property>
+            <property name="can-focus">False</property>
+            <property name="halign">start</property>
+            <property name="hexpand">True</property>
+            <property name="label" translatable="yes">Title</property>
+            <property name="ellipsize">end</property>
+            <attributes>
+              <attribute name="weight" value="bold"/>
+              <attribute name="scale" value="1"/>
+            </attributes>
+          </object>
+          <packing>
+            <property name="expand">False</property>
+            <property name="fill">True</property>
+            <property name="position">0</property>
+          </packing>
+        </child>
         <child>
           <object class="GtkBox">
             <property name="visible">True</property>
             <property name="can-focus">False</property>
-            <property name="halign">start</property>
-            <property name="margin-start">6</property>
-            <property name="hexpand">True</property>
-            <property name="orientation">vertical</property>
-            <child>
-              <object class="GtkLabel" id="title">
-                <property name="visible">True</property>
-                <property name="can-focus">False</property>
-                <property name="halign">start</property>
-                <property name="hexpand">True</property>
-                <property name="label" translatable="yes">Title</property>
-                <property name="ellipsize">end</property>
-                <attributes>
-                  <attribute name="weight" value="bold"/>
-                  <attribute name="scale" value="1.2"/>
-                </attributes>
-              </object>
-              <packing>
-                <property name="expand">False</property>
-                <property name="fill">True</property>
-                <property name="position">0</property>
-              </packing>
-            </child>
             <child>
               <object class="GtkLabel" id="channel">
                 <property name="visible">True</property>
@@ -343,25 +356,27 @@
               <packing>
                 <property name="expand">False</property>
                 <property name="fill">True</property>
+                <property name="position">0</property>
+              </packing>
+            </child>
+            <child>
+              <object class="GtkLabel" id="duration">
+                <property name="visible">True</property>
+                <property name="can-focus">False</property>
+                <property name="halign">end</property>
+                <property name="label" translatable="yes">0:00</property>
+                <property name="justify">right</property>
+                <property name="ellipsize">end</property>
+                <attributes>
+                  <attribute name="weight" value="bold"/>
+                </attributes>
+              </object>
+              <packing>
+                <property name="expand">False</property>
+                <property name="fill">True</property>
                 <property name="position">1</property>
               </packing>
             </child>
-          </object>
-          <packing>
-            <property name="expand">False</property>
-            <property name="fill">True</property>
-            <property name="position">0</property>
-          </packing>
-        </child>
-        <child>
-          <object class="GtkLabel" id="duratio">
-            <property name="visible">True</property>
-            <property name="can-focus">False</property>
-            <property name="halign">end</property>
-            <property name="valign">center</property>
-            <property name="margin-end">6</property>
-            <property name="label" translatable="yes">0:00</property>
-            <property name="justify">right</property>
           </object>
           <packing>
             <property name="expand">False</property>

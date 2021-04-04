@@ -10,8 +10,9 @@
         "--socket=fallback-x11",
         "--socket=wayland",
         "--socket=pulseaudio",
-        "--filesystem=~/Videos"
-
+        "--filesystem=~/Videos",
+        "--talk-name=org.gtk.vfs",
+        "--talk-name=org.gtk.vfs.*"
     ],
     "cleanup" : [
         "/include",

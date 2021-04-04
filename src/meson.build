@@ -30,6 +30,7 @@ stream_sources = [
   'main.py',
   'window.py',
   'results.py',
+  'search.py',
 ]
 
 install_data(stream_sources, install_dir: moduledir)
