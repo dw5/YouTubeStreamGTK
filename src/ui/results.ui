@@ -12,13 +12,9 @@
     <property name="can-focus">False</property>
     <property name="halign">center</property>
     <property name="valign">start</property>
-    <property name="margin-start">4</property>
-    <property name="margin-end">4</property>
-    <property name="margin-top">6</property>
-    <property name="margin-bottom">6</property>
     <property name="orientation">vertical</property>
-    <property name="spacing">6</property>
     <property name="baseline-position">top</property>
+    <signal name="motion-notify-event" handler="mouse_move" swapped="no"/>
     <child>
       <object class="GtkOverlay" id="video_overlay">
         <property name="visible">True</property>
@@ -27,22 +23,20 @@
         <property name="valign">center</property>
         <child>
           <object class="GtkBox" id="player_box">
-            <property name="width-request">332</property>
-            <property name="height-request">186</property>
             <property name="visible">True</property>
-            <property name="can-focus">False</property>
+            <property name="can-focus">True</property>
+            <property name="receives-default">True</property>
             <property name="halign">center</property>
             <property name="valign">center</property>
-            <property name="hexpand">False</property>
-            <property name="vexpand">False</property>
             <property name="orientation">vertical</property>
             <child>
               <object class="GtkImage" id="poster_image">
                 <property name="width-request">332</property>
                 <property name="height-request">186</property>
                 <property name="visible">True</property>
+                <property name="sensitive">False</property>
                 <property name="can-focus">False</property>
-                <property name="icon-name">video-x-generic</property>
+                <property name="resource">/sm/puri/Stream/ui/video-placeholder-332x186.png</property>
               </object>
               <packing>
                 <property name="expand">False</property>
@@ -56,10 +50,28 @@
           </packing>
         </child>
         <child type="overlay">
-          <object class="GtkBox">
+          <object class="GtkEventBox" id="event_box">
             <property name="visible">True</property>
             <property name="can-focus">False</property>
+            <property name="hexpand">True</property>
+            <property name="vexpand">True</property>
+            <property name="above-child">True</property>
+            <signal name="enter-notify-event" handler="mouse_enter" swapped="no"/>
+            <signal name="motion-notify-event" handler="mouse_move" swapped="no"/>
+            <child>
+              <placeholder/>
+            </child>
+          </object>
+          <packing>
+            <property name="pass-through">True</property>
+          </packing>
+        </child>
+        <child type="overlay">
+          <object class="GtkBox" id="controls_box">
+            <property name="visible">True</property>
+            <property name="can-focus">True</property>
             <property name="valign">end</property>
+            <property name="vexpand">True</property>
             <property name="orientation">vertical</property>
             <child>
               <object class="GtkBox">
@@ -74,7 +86,7 @@
                     <property name="can-focus">False</property>
                     <property name="spacing">8</property>
                     <child>
-                      <object class="GtkButton" id="audio-dl">
+                      <object class="GtkButton" id="audio_dl">
                         <property name="visible">True</property>
                         <property name="can-focus">True</property>
                         <property name="receives-default">True</property>
@@ -100,7 +112,7 @@
                       </packing>
                     </child>
                     <child>
-                      <object class="GtkButton" id="video-dl">
+                      <object class="GtkButton" id="video_dl">
                         <property name="visible">True</property>
                         <property name="can-focus">True</property>
                         <property name="receives-default">True</property>
@@ -246,24 +258,58 @@
                       </packing>
                     </child>
                     <child>
-                      <object class="GtkButton" id="fullscreen">
+                      <object class="GtkStack">
                         <property name="visible">True</property>
-                        <property name="can-focus">True</property>
-                        <property name="receives-default">True</property>
-                        <property name="tooltip-text" translatable="yes">Fullscreen</property>
-                        <property name="halign">center</property>
-                        <property name="valign">center</property>
-                        <signal name="clicked" handler="fullscreen_button" swapped="no"/>
+                        <property name="can-focus">False</property>
                         <child>
-                          <object class="GtkImage">
+                          <object class="GtkButton" id="fullscreen">
                             <property name="visible">True</property>
-                            <property name="can-focus">False</property>
-                            <property name="icon-name">view-fullscreen-symbolic</property>
+                            <property name="can-focus">True</property>
+                            <property name="receives-default">True</property>
+                            <property name="tooltip-text" translatable="yes">Fullscreen</property>
+                            <property name="halign">center</property>
+                            <property name="valign">center</property>
+                            <signal name="clicked" handler="fullscreen_button" swapped="no"/>
+                            <child>
+                              <object class="GtkImage">
+                                <property name="visible">True</property>
+                                <property name="can-focus">False</property>
+                                <property name="icon-name">view-fullscreen-symbolic</property>
+                              </object>
+                            </child>
+                            <style>
+                              <class name="rounded-button"/>
+                            </style>
                           </object>
+                          <packing>
+                            <property name="name">fullscreen</property>
+                          </packing>
                         </child>
-                        <style>
-                          <class name="rounded-button"/>
-                        </style>
+                        <child>
+                          <object class="GtkButton" id="unfullscreen">
+                            <property name="visible">True</property>
+                            <property name="can-focus">True</property>
+                            <property name="receives-default">True</property>
+                            <property name="tooltip-text" translatable="yes">Unfullscreen</property>
+                            <property name="halign">center</property>
+                            <property name="valign">center</property>
+                            <signal name="clicked" handler="unfullscreen_button" swapped="no"/>
+                            <child>
+                              <object class="GtkImage">
+                                <property name="visible">True</property>
+                                <property name="can-focus">False</property>
+                                <property name="icon-name">view-fullscreen-symbolic</property>
+                              </object>
+                            </child>
+                            <style>
+                              <class name="rounded-button"/>
+                            </style>
+                          </object>
+                          <packing>
+                            <property name="name">unfullscreen</property>
+                            <property name="position">1</property>
+                          </packing>
+                        </child>
                       </object>
                       <packing>
                         <property name="expand">False</property>
@@ -306,6 +352,9 @@
               </packing>
             </child>
           </object>
+          <packing>
+            <property name="index">1</property>
+          </packing>
         </child>
       </object>
       <packing>
@@ -327,7 +376,7 @@
             <property name="can-focus">False</property>
             <property name="halign">start</property>
             <property name="hexpand">True</property>
-            <property name="label" translatable="yes">Title</property>
+            <property name="label" translatable="yes">...</property>
             <property name="ellipsize">end</property>
             <attributes>
               <attribute name="weight" value="bold"/>
@@ -350,7 +399,7 @@
                 <property name="can-focus">False</property>
                 <property name="halign">start</property>
                 <property name="hexpand">True</property>
-                <property name="label" translatable="yes">Channel</property>
+                <property name="label" translatable="yes">...</property>
                 <property name="ellipsize">end</property>
               </object>
               <packing>
@@ -364,7 +413,7 @@
                 <property name="visible">True</property>
                 <property name="can-focus">False</property>
                 <property name="halign">end</property>
-                <property name="label" translatable="yes">0:00</property>
+                <property name="label" translatable="yes">...</property>
                 <property name="justify">right</property>
                 <property name="ellipsize">end</property>
                 <attributes>

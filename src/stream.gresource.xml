@@ -3,7 +3,8 @@
   <gresource prefix="/sm/puri/Stream">
     <file>ui/window.ui</file>
     <file>ui/results.ui</file>
-    <file>ui/results.css</file>
+    <file>ui/stream.css</file>
+    <file>ui/video-placeholder-332x186.png</file>
     <file alias="gtk/help-overlay.ui">ui/help-overlay.ui</file>
   </gresource>
 </gresources> 

@@ -1,12 +1,20 @@
 .results {
   border: 1px solid gray;
-  margin: 0px;
+  margin: 4px;
+  margin-bottom: 12px;
   padding: 6px;
   padding-bottom: 12px;
   border-radius: 8px;
   border-bottom-width: 1px;
   transition: 250ms all linear;
   background-color: white;
+}
+
+.fullscreen {
+  border: 0px solid green;
+  margin: 0px;
+  padding: 0px;
+  background-color: black;
 }
 
 button.rounded-button {

@@ -24,6 +24,7 @@ import json
 class Search:
 
     def __init__(self, **kwargs):
+        self.app_window = kwargs.get('app_window', None)
         self.query = kwargs.get('query', None)
 
         self.headers = ({

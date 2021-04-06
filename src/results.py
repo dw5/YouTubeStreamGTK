@@ -31,34 +31,52 @@ Handy.init()
 class ResultsBox(Gtk.Box):
     __gtype_name__ = 'ResultsBox'
 
+    event_box = Gtk.Template.Child()
     player_box = Gtk.Template.Child()
     poster_image = Gtk.Template.Child()
+    controls_box = Gtk.Template.Child()
     play = Gtk.Template.Child()
     pause = Gtk.Template.Child()
     slider = Gtk.Template.Child()
 
+    audio_dl = Gtk.Template.Child()
+    video_dl = Gtk.Template.Child()
+    speed = Gtk.Template.Child()
+    fullscreen = Gtk.Template.Child()
+    unfullscreen = Gtk.Template.Child()
+
+    details = Gtk.Template.Child()
     title = Gtk.Template.Child()
     channel = Gtk.Template.Child()
     duration = Gtk.Template.Child()
 
-    def __init__(self, **kwargs):
+    window_to_player_box_padding = 28
+
+    def __init__(self, app_window, **kwargs):
         super().__init__(**kwargs)
 
-        provider = Gtk.CssProvider()
-        provider.load_from_resource('/sm/puri/Stream/ui/results.css')
-        styleContext = Gtk.StyleContext()
-        styleContext.add_provider_for_screen(
-            Gdk.Screen.get_default(), provider,
-            Gtk.STYLE_PROVIDER_PRIORITY_APPLICATION)
+        self.app_window = app_window
+
+        # listen for motion on the player box for controls show/hide
+        self.event_box.add_events(Gdk.EventMask.POINTER_MOTION_MASK)
+
+        # determine window width at time of search
+        # do ratio calculation from width (16:9 or 1.77)
+        # retain aspect ratio
+        size = self.app_window.get_size()
+        self.app_orig_width = size.width
+        self.app_orig_height = size.height
+        self.video_box_width = int(size.width - self.window_to_player_box_padding)
+        self.video_box_height = int(self.video_box_width / 1.77)
 
         # init gstreamer player
         self.player = Gst.ElementFactory.make("playbin", "player")
         self.sink = Gst.ElementFactory.make("gtksink")
 
-        video_widget = self.sink.get_property("widget")
-        video_widget.set_size_request(332, 186)
+        self.video_widget = self.sink.get_property("widget")
+        self.video_widget.set_size_request(self.video_box_width, self.video_box_height)
 
-        self.player_box.add(video_widget)
+        self.player_box.add(self.video_widget)
 
     def get_duration(self, seconds):
         m, s = divmod(seconds, 60)
@@ -68,19 +86,12 @@ class ResultsBox(Gtk.Box):
         else:
             self.video_duration = f"{m:d}:{s:02d}"
 
-    def on_poster_load(self, source, async_res, user_data):
-        self.poster_image.clear()
-        pixbuf = GdkPixbuf.Pixbuf.new_from_stream_finish(async_res)
-        self.poster_image.set_from_pixbuf(pixbuf)
-
-
     def setup_stream(self, video_meta):
         video_title = video_meta['title']
         video_channel = video_meta['author']
         video_id = video_meta['videoId']
         poster_uri = video_meta['poster_uri']
         self.get_duration(video_meta['lengthSeconds'])
-
 
         self.title.set_label(video_title)
         self.channel.set_label(video_channel)
@@ -93,13 +104,26 @@ class ResultsBox(Gtk.Box):
         self.player.set_property("video-sink", self.sink)
 
         poster_file = Gio.File.new_for_uri(poster_uri)
-        result = GdkPixbuf.Pixbuf.new_from_stream_at_scale_async(poster_file.read(),
-                                                    332, 186, # width and height
-                                                    True,    # preserve_aspect_ratio
-                                                    None,     # cancellable
-                                                    self.on_poster_load, # callback,
-                                                    video_id)     # user_data
 
+        # threading seems to error after the second invocation
+        #def on_poster_load(source, async_res, user_data):
+        #    self.poster_image.clear()
+        #    pixbuf = GdkPixbuf.Pixbuf.new_from_stream_finish(async_res)
+        #    self.poster_image.set_from_pixbuf(pixbuf)
+        #
+        #result = GdkPixbuf.Pixbuf.new_from_stream_at_scale_async(poster_file.read(),
+        #                                            self.video_box_width, self.video_box_height,
+        #                                            True,           # preserve_aspect_ratio
+        #                                            None,           # cancellable
+        #                                            on_poster_load, # callback
+        #                                            video_id)       # user_data
+
+        pixbuf = GdkPixbuf.Pixbuf.new_from_stream_at_scale(poster_file.read(),
+                                                    self.video_box_width, self.video_box_height,
+                                                    True, # preserve_aspect_ratio
+                                                    None) # cancellable
+        self.poster_image.clear()
+        self.poster_image.set_from_pixbuf(pixbuf)
 
     def update_slider(self):
         if not self.is_playing:
@@ -150,7 +174,7 @@ class ResultsBox(Gtk.Box):
         self.slider.set_sensitive(True)
 
         # update slider to track video time in slider
-        GLib.timeout_add(1000, self.update_slider)
+        GLib.timeout_add_seconds(1, self.update_slider)
 
     @Gtk.Template.Callback()
     def pause_button(self, button):
@@ -163,9 +187,58 @@ class ResultsBox(Gtk.Box):
     def speed_button(self, button):
         print("speed_button")
 
+    def resize_player(self, width, height):
+        self.poster_image.set_size_request(width, height)
+        self.video_widget.set_size_request(width, height)
+
+    def visible_children(self, visible, child_to_match):
+        children = self.app_window.results_list.get_children()
+        for child in children:
+            if child == child_to_match:
+                child.set_visible(True)
+            else:
+                child.set_visible(visible)
+
     @Gtk.Template.Callback()
     def fullscreen_button(self, button):
-        print("fullscreen_button")
+        self.fullscreen.set_visible(False)
+        self.unfullscreen.set_visible(True)
+        self.app_window.fullscreen()
+        self.app_window.search_bar_toggle.set_active(False)
+        self.app_window.search_bar.set_visible(False)
+        self.app_window.header_bar.set_visible(False)
+        self.visible_children(False, self.get_parent())
+        self.details.set_visible(False)
+
+        set_width = int(Gdk.Screen.get_default().get_width())
+        set_height = int(Gdk.Screen.get_default().get_height())
+        self.resize_player(set_width, set_height)
+        self.app_window.results_window.set_policy(Gtk.PolicyType.NEVER, Gtk.PolicyType.NEVER)
+
+        results_context = self.get_style_context()
+        results_context.remove_class("results")
+        results_context.add_class("fullscreen")
+
+    @Gtk.Template.Callback()
+    def unfullscreen_button(self, button):
+        self.fullscreen.set_visible(True)
+        self.unfullscreen.set_visible(False)
+        self.app_window.unfullscreen()
+        self.app_window.search_bar_toggle.set_active(True)
+        self.app_window.search_bar.set_visible(True)
+        self.app_window.header_bar.set_visible(True)
+        self.visible_children(True, None)
+        self.details.set_visible(True)
+        results_context = self.get_style_context()
+        results_context.remove_class("fullscreen")
+        results_context.add_class("results")
+
+        set_width = int(self.app_orig_width - self.window_to_player_box_padding)
+        set_height = int(set_width / 1.77)
+
+        self.resize_player(set_width, set_height)
+        self.app_window.resize(self.app_orig_width, self.app_orig_height)
+        self.app_window.results_window.set_policy(Gtk.PolicyType.NEVER, Gtk.PolicyType.AUTOMATIC)
 
     @Gtk.Template.Callback()
     def seek_slider(self, scale):
@@ -175,3 +248,13 @@ class ResultsBox(Gtk.Box):
         self.player.seek_simple(Gst.Format.TIME,
             Gst.SeekFlags.FLUSH | Gst.SeekFlags.KEY_UNIT,
             seek * Gst.SECOND / self.percent)
+
+    def poll_mouse(self):
+        if self.controls_box.get_visible():
+            self.controls_box.set_visible(False)
+
+    @Gtk.Template.Callback()
+    def mouse_move(self, event, data):
+        if not self.controls_box.get_visible():
+            self.controls_box.set_visible(True)
+        GLib.timeout_add_seconds(3, self.poll_mouse)

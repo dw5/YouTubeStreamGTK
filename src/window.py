@@ -16,9 +16,11 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 import gi
+gi.require_version('Gdk', '3.0')
+gi.require_version('Gio', '2.0')
 gi.require_version('Gtk', '3.0')
 gi.require_version('Handy', '1')
-from gi.repository import Gtk, Handy
+from gi.repository import Gdk, Gio, Gtk, Handy
 
 Handy.init()
 
@@ -29,6 +31,8 @@ from .search import Search
 class StreamWindow(Handy.ApplicationWindow):
     __gtype_name__ = 'StreamWindow'
 
+    header_bar = Gtk.Template.Child()
+
     search_bar_toggle = Gtk.Template.Child()
     search_bar = Gtk.Template.Child()
 
@@ -37,7 +41,7 @@ class StreamWindow(Handy.ApplicationWindow):
     results_list = Gtk.Template.Child()
 
     @Gtk.Template.Callback()
-    def search_toggle(self, widget):
+    def search_toggle(self, toggle_button):
         # toggle the True/False from what is current
         self.search_bar.set_visible(self.search_bar_toggle.get_active())
 
@@ -46,25 +50,46 @@ class StreamWindow(Handy.ApplicationWindow):
         for child in children:
             child.destroy()
 
-    @Gtk.Template.Callback()
-    def search_entry(self, widget):
-        self.status_page.set_visible(False)
-        self.results_window.set_visible(True)
+    def do_search(self, task, source_obj, task_data, cancellable):
+        search_results = Search(app_window = self, query = self.search_query)
 
+        self.results_window.set_visible(True)
         self.clear_entries()
 
-        # get search results
-        search_results = Search(query = widget.get_text())
-
-        # iterate per video row
         for video_meta in search_results.json:
-            results_box = ResultsBox()
+            results_box = ResultsBox(self)
             self.results_list.add(results_box)
 
             results_box.setup_stream(video_meta)
 
-            # one entry for now
-            break
+    @Gtk.Template.Callback()
+    def search_entry(self, search_box):
+        self.status_page.set_visible(False)
+        self.search_query = search_box.get_text()
+
+        # threading throws errors
+        #
+        # for api legibility
+        #stub_data = None
+        #stub_callback = None
+        #stub_cancellable = None
+        #search_task = Gio.Task.new(self, stub_cancellable, stub_callback, stub_data)
+        #
+        #search_task.run_in_thread(self.do_search)
+        self.do_search(None, None, None, None)
+
+#    @Gtk.Template.Callback()
+#    def keypress_listener(self, widget, ev):
+#        key = Gdk.keyval_name(ev.keyval)
+#        if key == "k":
+#            # do stuff
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
+
+        provider = Gtk.CssProvider()
+        provider.load_from_resource('/sm/puri/Stream/ui/stream.css')
+        styleContext = Gtk.StyleContext()
+        styleContext.add_provider_for_screen(
+            Gdk.Screen.get_default(), provider,
+            Gtk.STYLE_PROVIDER_PRIORITY_APPLICATION)
