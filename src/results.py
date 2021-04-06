@@ -86,6 +86,26 @@ class ResultsBox(Gtk.Box):
         else:
             self.video_duration = f"{m:d}:{s:02d}"
 
+    def on_file_read(self, poster_file, async_res, user_data):
+        print('on_file_read works')
+        stream = poster_file.read_finish(async_res)
+        GdkPixbuf.Pixbuf.new_from_stream_at_scale_async(stream,
+                                                    self.video_box_width, self.video_box_height,
+                                                    True,           # preserve_aspect_ratio
+                                                    None,           # cancellable
+                                                    self.on_stream_load, # callback
+                                                    None)           # user_data
+
+    def on_stream_load(self, source, async_res, context):
+        print('stream_at_scale_async works')
+        pixbuf = GdkPixbuf.Pixbuf.new_from_stream_finish(async_res)
+
+        self.poster_image.clear()
+        self.poster_image.set_from_pixbuf(pixbuf)
+
+    def stream_at_scale_async(self, poster_file):
+        stream = poster_file.read_async(GLib.PRIORITY_DEFAULT, None, self.on_file_read, None)
+
     def setup_stream(self, video_meta):
         video_title = video_meta['title']
         video_channel = video_meta['author']
@@ -105,25 +125,7 @@ class ResultsBox(Gtk.Box):
 
         poster_file = Gio.File.new_for_uri(poster_uri)
 
-        # threading seems to error after the second invocation
-        #def on_poster_load(source, async_res, user_data):
-        #    self.poster_image.clear()
-        #    pixbuf = GdkPixbuf.Pixbuf.new_from_stream_finish(async_res)
-        #    self.poster_image.set_from_pixbuf(pixbuf)
-        #
-        #result = GdkPixbuf.Pixbuf.new_from_stream_at_scale_async(poster_file.read(),
-        #                                            self.video_box_width, self.video_box_height,
-        #                                            True,           # preserve_aspect_ratio
-        #                                            None,           # cancellable
-        #                                            on_poster_load, # callback
-        #                                            video_id)       # user_data
-
-        pixbuf = GdkPixbuf.Pixbuf.new_from_stream_at_scale(poster_file.read(),
-                                                    self.video_box_width, self.video_box_height,
-                                                    True, # preserve_aspect_ratio
-                                                    None) # cancellable
-        self.poster_image.clear()
-        self.poster_image.set_from_pixbuf(pixbuf)
+        self.stream_at_scale_async(poster_file)
 
     def update_slider(self):
         if not self.is_playing:
@@ -143,10 +145,14 @@ class ResultsBox(Gtk.Box):
             if not success:
                 position_value = 0
             
-            # block seek slider function so it doesn't loop itself
-            self.slider.handler_block_by_func(self.seek_slider)
-            self.slider.set_value(position_value)
-            self.slider.handler_unblock_by_func(self.seek_slider)
+            try:
+                # block seek slider function so it doesn't loop itself
+                self.slider.handler_block_by_func(self.seek_slider)
+                self.slider.set_value(position_value)
+                self.slider.handler_unblock_by_func(self.seek_slider)
+            except:
+                return False
+
         return True
 
     @Gtk.Template.Callback()
