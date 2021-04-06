@@ -87,7 +87,6 @@ class ResultsBox(Gtk.Box):
             self.video_duration = f"{m:d}:{s:02d}"
 
     def on_file_read(self, poster_file, async_res, user_data):
-        print('on_file_read works')
         stream = poster_file.read_finish(async_res)
         GdkPixbuf.Pixbuf.new_from_stream_at_scale_async(stream,
                                                     self.video_box_width, self.video_box_height,
@@ -97,7 +96,6 @@ class ResultsBox(Gtk.Box):
                                                     None)           # user_data
 
     def on_stream_load(self, source, async_res, context):
-        print('stream_at_scale_async works')
         pixbuf = GdkPixbuf.Pixbuf.new_from_stream_finish(async_res)
 
         self.poster_image.clear()
