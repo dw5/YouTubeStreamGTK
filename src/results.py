@@ -258,3 +258,7 @@ class ResultsBox(Gtk.Box):
         if not self.controls_box.get_visible():
             self.controls_box.set_visible(True)
         GLib.timeout_add_seconds(3, self.poll_mouse)
+
+    @Gtk.Template.Callback()
+    def swallow_slider_scroll_event(self, event, data):
+        return True

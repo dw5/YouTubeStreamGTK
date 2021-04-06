@@ -15,11 +15,16 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
+import gi
+gi.require_version('Gio', '2.0')
+from gi.repository import Gio, GLib
+
 from socket import timeout
 from urllib.parse import urlencode
-from gi.repository import GLib
 import urllib.request
 import json
+
+from .results import ResultsBox
 
 class Search:
 
@@ -34,13 +39,20 @@ class Search:
             "/75.0.3770.100 Safari/537.36"
         })
 
-        self.do_search()
+        search_task = Gio.Task.new(None, None, self.show_results, None)
+        search_task.run_in_thread(self.do_search)
 
     def get_strong_instance(self):
-        # lookup instances, get a strong one, return it
+        # lookup instances, get a strong one, to be done (stubbed for now)
         self.instance = "https://invidious.xyz"
 
-    def do_search(self):
+    def clear_entries(self):
+        children = self.app_window.results_list.get_children()
+        for child in children:
+            child.destroy()
+
+    def do_search(self, task, source_obj, task_data, cancellable):
+        self.json = {}
         self.get_strong_instance()
 
         enc_query = urlencode({'q': self.query})
@@ -59,6 +71,18 @@ class Search:
             print("json did not load from url results")
 
         self.get_poster_url()
+
+    def show_results(self, source_obj, task_data, cancellable):
+        self.clear_entries()
+
+        for video_meta in self.json:
+            results_box = ResultsBox(self.app_window)
+            self.app_window.results_list.add(results_box)
+
+            results_box.setup_stream(video_meta)
+
+        self.app_window.spinner.set_visible(False)
+        self.app_window.results_window.set_visible(True)
 
     def get_poster_url(self):
         # tweak json with local poster url
