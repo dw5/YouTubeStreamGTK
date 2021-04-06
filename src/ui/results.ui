@@ -36,6 +36,8 @@
                 <property name="visible">True</property>
                 <property name="sensitive">False</property>
                 <property name="can-focus">False</property>
+                <property name="halign">center</property>
+                <property name="valign">center</property>
                 <property name="resource">/sm/puri/Stream/ui/video-placeholder-332x186.png</property>
               </object>
               <packing>
@@ -239,7 +241,7 @@
                           <object class="GtkLabel">
                             <property name="visible">True</property>
                             <property name="can-focus">False</property>
-                            <property name="label" translatable="yes">1x</property>
+                            <property name="label">1x</property>
                             <property name="justify">center</property>
                             <attributes>
                               <attribute name="weight" value="bold"/>
@@ -377,7 +379,7 @@
             <property name="can-focus">False</property>
             <property name="halign">start</property>
             <property name="hexpand">True</property>
-            <property name="label" translatable="yes">...</property>
+            <property name="label">...</property>
             <property name="ellipsize">end</property>
             <attributes>
               <attribute name="weight" value="bold"/>
@@ -400,7 +402,7 @@
                 <property name="can-focus">False</property>
                 <property name="halign">start</property>
                 <property name="hexpand">True</property>
-                <property name="label" translatable="yes">...</property>
+                <property name="label">...</property>
                 <property name="ellipsize">end</property>
               </object>
               <packing>
@@ -414,7 +416,7 @@
                 <property name="visible">True</property>
                 <property name="can-focus">False</property>
                 <property name="halign">end</property>
-                <property name="label" translatable="yes">...</property>
+                <property name="label">...</property>
                 <property name="justify">right</property>
                 <property name="ellipsize">end</property>
                 <attributes>

@@ -63,11 +63,14 @@ class Search:
         try:
             results = urllib.request.urlopen(url, timeout=5)
         except (urllib.error.HTTPError, timeout):
+            self.app_window.error_box.set_visible(True)
+            self.app_window.error_heading.set_label("Service Failure")
+            self.app_window.error_text.set_label("There is no response from the streaming servers.")
             print("URL did not respond")
 
         try:
             self.json = json.loads(results.read())
-        except UnboundLocalError:
+        except:
             print("json did not load from url results")
 
         self.get_poster_url()

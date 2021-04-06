@@ -36,6 +36,9 @@ class StreamWindow(Handy.ApplicationWindow):
 
     status_page = Gtk.Template.Child()
     spinner = Gtk.Template.Child()
+    error_box = Gtk.Template.Child()
+    error_heading = Gtk.Template.Child()
+    error_text = Gtk.Template.Child()
     results_window = Gtk.Template.Child()
     results_list = Gtk.Template.Child()
 
@@ -47,6 +50,9 @@ class StreamWindow(Handy.ApplicationWindow):
     @Gtk.Template.Callback()
     def search_entry(self, search_box):
         self.status_page.set_visible(False)
+        self.error_box.set_visible(False)
+        self.error_heading.set_label("...")
+        self.error_text.set_label("...")
         self.results_window.set_visible(False)
         self.spinner.set_visible(True)
 
