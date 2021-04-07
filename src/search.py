@@ -17,11 +17,9 @@
 
 import gi
 gi.require_version('Gio', '2.0')
-from gi.repository import Gio, GLib
+gi.require_version('Soup', '2.4')
+from gi.repository import Gio, GLib, Soup
 
-from socket import timeout
-from urllib.parse import urlencode
-import urllib.request
 import json
 
 from .results import ResultsBox
@@ -32,15 +30,7 @@ class Search:
         self.app_window = kwargs.get('app_window', None)
         self.query = kwargs.get('query', None)
 
-        self.headers = ({
-            "User-Agent":
-            "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
-            "AppleWebKit/537.36 (KHTML, like Gecko) Chrome"
-            "/75.0.3770.100 Safari/537.36"
-        })
-
-        search_task = Gio.Task.new(None, None, self.show_results, None)
-        search_task.run_in_thread(self.do_search)
+        self.do_search()
 
     def get_strong_instance(self):
         # lookup instances, get a strong one, to be done (stubbed for now)
@@ -51,32 +41,40 @@ class Search:
         for child in children:
             child.destroy()
 
-    def do_search(self, task, source_obj, task_data, cancellable):
-        self.json = {}
+    def do_search(self):
         self.get_strong_instance()
 
-        enc_query = urlencode({'q': self.query})
-        uri = f"{self.instance}/api/v1/search?{enc_query}"
+        query = GLib.uri_escape_string(self.query, None, None)
+        uri = f"{self.instance}/api/v1/search?q={query};fields=title,videoId,author,lengthSeconds,videoThumbnails"
 
-        url = urllib.request.Request(uri, headers=self.headers)
+        self.session = Soup.Session.new()
+        self.session.set_property("timeout", 5)
+        message = Soup.Message.new("GET", uri)
+        self.session.queue_message(message, self.show_results, message)
+
+    def show_error_box(self, heading, text):
+        self.app_window.error_box.set_visible(True)
+        self.app_window.error_heading.set_label(heading)
+        self.app_window.error_text.set_label(text)
+
+    def show_results(self, session, result, message):
+        self.clear_entries()
+        self.app_window.spinner.set_visible(False)
+
+        if message.status_code != 200:
+            self.show_error_box("Service Failure",
+                "There is no response from the streaming servers.")
+            return False
 
         try:
-            results = urllib.request.urlopen(url, timeout=5)
-        except (urllib.error.HTTPError, timeout):
-            self.app_window.error_box.set_visible(True)
-            self.app_window.error_heading.set_label("Service Failure")
-            self.app_window.error_text.set_label("There is no response from the streaming servers.")
-            print("URL did not respond")
-
-        try:
-            self.json = json.loads(results.read())
+            self.json = json.loads(message.response_body.data)
         except:
+            self.show_error_box("Service Failure",
+                "The streaming server response failed to parse results.")
             print("json did not load from url results")
+            return False
 
         self.get_poster_url()
-
-    def show_results(self, source_obj, task_data, cancellable):
-        self.clear_entries()
 
         for video_meta in self.json:
             results_box = ResultsBox(self.app_window)
@@ -84,7 +82,6 @@ class Search:
 
             results_box.setup_stream(video_meta)
 
-        self.app_window.spinner.set_visible(False)
         self.app_window.results_window.set_visible(True)
 
     def get_poster_url(self):
