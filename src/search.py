@@ -34,6 +34,14 @@ class Search:
 
     def get_strong_instance(self):
         # lookup instances, get a strong one, to be done (stubbed for now)
+        # get urls from api.invidious.io
+        # https://api.invidious.io/instances.json?sort_by=health
+        # api urls to confirm are strong (some throw forbidden)
+        # api/v1/videos/{videoId}
+        # api/v1/search/query
+        #self.instance = "https://ytprivate.com"
+        #self.instance = "https://vid.puffyan.us"
+        #self.instance = "https://iteroni.com/"
         self.instance = "https://invidious.xyz"
 
     def clear_entries(self):
@@ -87,6 +95,8 @@ class Search:
     def get_poster_url(self):
         # tweak json with local poster url
         for video_meta in self.json:
+            # append the strong instance for results to use
+            video_meta['strong_instance'] = self.instance
             for poster in video_meta['videoThumbnails']:
                 if poster['quality'] == 'medium':
                     video_meta['poster_uri'] = poster['url']
