@@ -41,6 +41,8 @@ class ResultsBox(Gtk.Box):
     play = Gtk.Template.Child()
     pause = Gtk.Template.Child()
     slider = Gtk.Template.Child()
+    time_viewed = Gtk.Template.Child()
+    time_remaining = Gtk.Template.Child()
 
     audio_dl = Gtk.Template.Child()
     audio_dl_image = Gtk.Template.Child()
@@ -74,6 +76,9 @@ class ResultsBox(Gtk.Box):
         self.video_box_width = int(size.width - self.window_to_player_box_padding)
         self.video_box_height = int(self.video_box_width / 1.77)
 
+        self.player_box.set_size_request(self.video_box_width, self.video_box_height)
+        self.poster_image.set_size_request(self.video_box_width, self.video_box_height)
+
         # init gstreamer player
         self.player = Gst.ElementFactory.make("playbin", "player")
         self.sink = Gst.ElementFactory.make("gtksink")
@@ -83,13 +88,14 @@ class ResultsBox(Gtk.Box):
 
         self.player_box.add(self.video_widget)
 
-    def get_duration(self, seconds):
+    def get_readable_seconds(self, seconds):
         m, s = divmod(seconds, 60)
         h, m = divmod(m, 60)
         if seconds >= 3600:
-            self.video_duration = f"{h:d}:{m:02d}:{s:02d}"
+            readable_seconds = f"{h:d}:{m:02d}:{s:02d}"
         else:
-            self.video_duration = f"{m:d}:{s:02d}"
+            readable_seconds = f"{m:d}:{s:02d}"
+        return readable_seconds
 
     def on_file_read(self, poster_file, async_res, user_data):
         stream = poster_file.read_finish(async_res)
@@ -105,6 +111,7 @@ class ResultsBox(Gtk.Box):
 
         self.poster_image.clear()
         self.poster_image.set_from_pixbuf(pixbuf)
+        self.poster_image.set_visible(True)
 
     def stream_at_scale_async(self, poster_file):
         stream = poster_file.read_async(GLib.PRIORITY_DEFAULT, None,
@@ -112,13 +119,14 @@ class ResultsBox(Gtk.Box):
 
     def parse_video_results(self, session, result, message):
         if message.status_code != 200:
-            print("video json details did not respond")
+            # remove unplayable video urls from list
+            self.set_visible(False)
             return False
 
         try:
             self.json = json.loads(message.response_body.data)
         except:
-            print("video json did not parse.")
+            self.set_visible(False)
             return False
 
         self.video_uri = None
@@ -133,7 +141,6 @@ class ResultsBox(Gtk.Box):
             #    self.video_uri = format_stream['url']
 
         if not self.video_uri:
-            # remove unplayable video urls from list
             self.set_visible(False)
             return False
 
@@ -159,11 +166,11 @@ class ResultsBox(Gtk.Box):
         self.video_title = video_meta['title']
         self.video_channel = video_meta['author']
         self.poster_uri = video_meta['poster_uri']
-        self.get_duration(video_meta['lengthSeconds'])
+        video_duration = self.get_readable_seconds(video_meta['lengthSeconds'])
 
         self.title.set_label(self.video_title)
         self.channel.set_label(self.video_channel)
-        self.duration.set_label(self.video_duration)
+        self.duration.set_label(video_duration)
 
         self.get_video_details()
 
@@ -171,15 +178,26 @@ class ResultsBox(Gtk.Box):
         if not self.is_playing:
             return False
         else:
-            success, self.duration = self.player.query_duration(Gst.Format.TIME)
+            success, duration = self.player.query_duration(Gst.Format.TIME)
 
             # GtkScale is set to 100%, calculate duration and position steps
-            self.percent = 100 / (self.duration / Gst.SECOND)
+            self.percent = 100 / (duration / Gst.SECOND)
 
             # get current position (nanoseconds)
             success, position = self.player.query_position(Gst.Format.TIME)
 
             position_value = float(position) / Gst.SECOND * self.percent
+
+            if int(duration) > 0:
+                viewed_seconds = int(position / Gst.SECOND)
+                remaining_seconds = int((duration - position) / Gst.SECOND)
+                viewed = self.get_readable_seconds(viewed_seconds)
+                remaining = self.get_readable_seconds(remaining_seconds)
+                print("Viewed: " + str(viewed))
+                print("Remaining: -" + str(remaining))
+
+                self.time_viewed.set_label(viewed)
+                self.time_remaining.set_label(f"-{remaining}")
 
             # is negative number when not successful, so put it to 0
             if not success:
@@ -227,7 +245,10 @@ class ResultsBox(Gtk.Box):
         dest_title = self.strictify_name(self.video_title)
         dest_path = f"{dest_dir}/{dest_title}.{dest_ext}"
         dest = Gio.File.new_for_path(dest_path)
-        dl_stream.copy_async(dest, Gio.FileCopyFlags.OVERWRITE,
+        flags = Gio.FileCopyFlags
+        dl_stream.copy_async(dest,
+                # bitwise or (not tuple) for multiple flags
+                Gio.FileCopyFlags.OVERWRITE|Gio.FileCopyFlags.ALL_METADATA|Gio.FileCopyFlags.TARGET_DEFAULT_PERMS,
                 GLib.PRIORITY_DEFAULT, None,
                 self.progress_video_cb, (),
                 self.ready_video_cb, None)
@@ -264,7 +285,7 @@ class ResultsBox(Gtk.Box):
             src.copy_finish(async_res)
         except GLib.Error as e:
             self.show_error_icon('audio')
-            print("Failed to write file stream %s", e.message)
+            print("Failed to write file stream ", e.message)
             return False
         self.show_success_icon('audio')
 
@@ -273,7 +294,7 @@ class ResultsBox(Gtk.Box):
             src.copy_finish(async_res)
         except GLib.Error as e:
             self.show_error_icon('video')
-            print("Failed to write file stream %s", e.message)
+            print("Failed to write file stream ", e.message)
             return False
         self.show_success_icon('video')
 
@@ -413,11 +434,8 @@ class ResultsBox(Gtk.Box):
         #     "container": "mp4",
         #     "qualityLabel": "720p"
 
-        video_quality = "720p"
         last_bitrate = None
         self.audio_dl_uri = None
-        self.video_dl_uri = None
-
         for af in self.json['adaptiveFormats']:
             if af['type'].startswith('audio/mp4'):
                 if not self.audio_dl_uri:
@@ -428,18 +446,21 @@ class ResultsBox(Gtk.Box):
                     last_bitrate = af['bitrate']
                     self.audio_dl_uri = af['url']
 
-            elif af['type'].startswith('video/mp4'):
+        video_quality = "720p"
+        self.video_dl_uri = None
+        for fs in self.json['formatStreams']:
+            if fs['type'].startswith('video/mp4'):
                 # set it to something
                 if not self.video_dl_uri:
-                    self.video_dl_uri = af['url']
+                    self.video_dl_uri = fs['url']
 
-                if 'qualityLabel' in af:
-                    if af['qualityLabel'] == "720p" and video_quality == "720p":
-                        self.video_dl_uri = af['url']
-                    elif af['qualityLabel'] == "480p" and video_quality == "480p":
-                        self.video_dl_uri = af['url']
-                    elif af['qualityLabel'] == "1080p" and video_quality == "1080p":
-                        self.video_dl_uri = af['url']
+                if 'qualityLabel' in fs:
+                    if fs['qualityLabel'] == "720p" and video_quality == "720p":
+                        self.video_dl_uri = fs['url']
+                    elif fs['qualityLabel'] == "480p" and video_quality == "480p":
+                        self.video_dl_uri = fs['url']
+                    elif fs['qualityLabel'] == "1080p" and video_quality == "1080p":
+                        self.video_dl_uri = fs['url']
 
         if self.audio_dl_uri:
             self.audio_dl.set_sensitive(True)

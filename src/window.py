@@ -23,7 +23,10 @@ from gi.repository import Gdk, Gtk, Handy
 
 Handy.init()
 
+import json
+
 from .search import Search
+from .instances import Instances
 
 @Gtk.Template(resource_path='/sm/puri/Stream/ui/window.ui')
 class StreamWindow(Handy.ApplicationWindow):
@@ -50,15 +53,19 @@ class StreamWindow(Handy.ApplicationWindow):
     @Gtk.Template.Callback()
     def search_entry(self, search_box):
         self.status_page.set_visible(False)
-        self.error_box.set_visible(False)
-        self.error_heading.set_label("...")
-        self.error_text.set_label("...")
+        self.hide_error_box()
         self.results_window.set_visible(False)
         self.spinner.set_visible(True)
 
         # insert spinner
         search_query = search_box.get_text()
-        search = Search(app_window = self, query = search_query)
+
+        if self.strong_instances[0]:
+            search = Search(app_window = self)
+            search.do_search(query = search_query)
+        else:
+            self.show_error_box("Service Failure",
+                "No strong video server instances found yet. Try again shortly.")
 
 #    @Gtk.Template.Callback()
 #    def keypress_listener(self, widget, ev):
@@ -66,8 +73,24 @@ class StreamWindow(Handy.ApplicationWindow):
 #        if key == "k":
 #            # do stuff
 
+
+    def hide_error_box(self):
+        self.error_box.set_visible(False)
+        self.error_heading.set_label("Error")
+        self.error_text.set_label("...")
+
+    def show_error_box(self, heading, text):
+        self.spinner.set_visible(False)
+        self.error_box.set_visible(True)
+        self.error_heading.set_label(heading)
+        self.error_text.set_label(text)
+
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
+
+        self.strong_instances = []
+        instances = Instances(app_window = self)
+        instances.get_strong_instances()
 
         provider = Gtk.CssProvider()
         provider.load_from_resource('/sm/puri/Stream/ui/stream.css')

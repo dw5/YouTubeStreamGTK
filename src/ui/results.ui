@@ -33,7 +33,6 @@
               <object class="GtkImage" id="poster_image">
                 <property name="width-request">332</property>
                 <property name="height-request">186</property>
-                <property name="visible">True</property>
                 <property name="sensitive">False</property>
                 <property name="can-focus">False</property>
                 <property name="halign">center</property>
@@ -41,7 +40,7 @@
                 <property name="resource">/sm/puri/Stream/ui/video-placeholder-332x186.png</property>
               </object>
               <packing>
-                <property name="expand">False</property>
+                <property name="expand">True</property>
                 <property name="fill">True</property>
                 <property name="position">0</property>
               </packing>
@@ -94,6 +93,7 @@
                         <property name="can-focus">True</property>
                         <property name="receives-default">True</property>
                         <property name="tooltip-text" translatable="yes">Save Audio</property>
+                        <property name="opacity">0.80</property>
                         <property name="halign">center</property>
                         <property name="valign">center</property>
                         <signal name="clicked" handler="audio_dl_button" swapped="no"/>
@@ -121,6 +121,7 @@
                         <property name="can-focus">True</property>
                         <property name="receives-default">True</property>
                         <property name="tooltip-text" translatable="yes">Save Video</property>
+                        <property name="opacity">0.80</property>
                         <property name="halign">center</property>
                         <property name="valign">center</property>
                         <signal name="clicked" handler="video_dl_button" swapped="no"/>
@@ -164,6 +165,7 @@
                             <property name="can-focus">True</property>
                             <property name="receives-default">True</property>
                             <property name="tooltip-text" translatable="yes">Play</property>
+                            <property name="opacity">0.80</property>
                             <property name="halign">center</property>
                             <property name="valign">center</property>
                             <signal name="clicked" handler="play_button" swapped="no"/>
@@ -190,6 +192,7 @@
                             <property name="can-focus">True</property>
                             <property name="receives-default">True</property>
                             <property name="tooltip-text" translatable="yes">Pause</property>
+                            <property name="opacity">0.80</property>
                             <property name="halign">center</property>
                             <property name="valign">center</property>
                             <signal name="clicked" handler="pause_button" swapped="no"/>
@@ -237,6 +240,7 @@
                         <property name="can-focus">True</property>
                         <property name="receives-default">True</property>
                         <property name="tooltip-text" translatable="yes">Adjust Speed</property>
+                        <property name="opacity">0.80</property>
                         <property name="halign">center</property>
                         <property name="valign">center</property>
                         <signal name="clicked" handler="speed_button" swapped="no"/>
@@ -272,6 +276,7 @@
                             <property name="can-focus">True</property>
                             <property name="receives-default">True</property>
                             <property name="tooltip-text" translatable="yes">Fullscreen</property>
+                            <property name="opacity">0.80</property>
                             <property name="halign">center</property>
                             <property name="valign">center</property>
                             <signal name="clicked" handler="fullscreen_button" swapped="no"/>
@@ -292,10 +297,10 @@
                         </child>
                         <child>
                           <object class="GtkButton" id="unfullscreen">
-                            <property name="visible">True</property>
                             <property name="can-focus">True</property>
                             <property name="receives-default">True</property>
                             <property name="tooltip-text" translatable="yes">Unfullscreen</property>
+                            <property name="opacity">0.80</property>
                             <property name="halign">center</property>
                             <property name="valign">center</property>
                             <signal name="clicked" handler="unfullscreen_button" swapped="no"/>
@@ -337,19 +342,78 @@
               </packing>
             </child>
             <child>
-              <object class="GtkScale" id="slider">
+              <object class="GtkBox">
                 <property name="visible">True</property>
-                <property name="sensitive">False</property>
-                <property name="can-focus">True</property>
-                <property name="margin-top">6</property>
-                <property name="margin-bottom">6</property>
-                <property name="adjustment">slider-duration</property>
-                <property name="show-fill-level">True</property>
-                <property name="round-digits">1</property>
-                <property name="draw-value">False</property>
-                <property name="has-origin">False</property>
-                <signal name="scroll-event" handler="swallow_slider_scroll_event" swapped="no"/>
-                <signal name="value-changed" handler="seek_slider" swapped="no"/>
+                <property name="can-focus">False</property>
+                <child>
+                  <object class="GtkLabel" id="time_viewed">
+                    <property name="width-request">24</property>
+                    <property name="visible">True</property>
+                    <property name="can-focus">False</property>
+                    <property name="opacity">0.80</property>
+                    <property name="halign">end</property>
+                    <property name="valign">center</property>
+                    <property name="margin-start">6</property>
+                    <property name="label" translatable="yes">...</property>
+                    <attributes>
+                      <attribute name="scale" value="0.80000000000000004"/>
+                    </attributes>
+                    <style>
+                      <class name="overlay-text"/>
+                    </style>
+                  </object>
+                  <packing>
+                    <property name="expand">False</property>
+                    <property name="fill">True</property>
+                    <property name="position">0</property>
+                  </packing>
+                </child>
+                <child>
+                  <object class="GtkScale" id="slider">
+                    <property name="visible">True</property>
+                    <property name="sensitive">False</property>
+                    <property name="can-focus">True</property>
+                    <property name="opacity">0.80</property>
+                    <property name="margin-top">6</property>
+                    <property name="margin-bottom">6</property>
+                    <property name="hexpand">True</property>
+                    <property name="adjustment">slider-duration</property>
+                    <property name="show-fill-level">True</property>
+                    <property name="round-digits">1</property>
+                    <property name="draw-value">False</property>
+                    <property name="has-origin">False</property>
+                    <signal name="scroll-event" handler="swallow_slider_scroll_event" swapped="no"/>
+                    <signal name="value-changed" handler="seek_slider" swapped="no"/>
+                  </object>
+                  <packing>
+                    <property name="expand">False</property>
+                    <property name="fill">True</property>
+                    <property name="position">1</property>
+                  </packing>
+                </child>
+                <child>
+                  <object class="GtkLabel" id="time_remaining">
+                    <property name="width-request">24</property>
+                    <property name="visible">True</property>
+                    <property name="can-focus">False</property>
+                    <property name="opacity">0.80</property>
+                    <property name="halign">start</property>
+                    <property name="valign">center</property>
+                    <property name="margin-end">6</property>
+                    <property name="label" translatable="yes">...</property>
+                    <attributes>
+                      <attribute name="scale" value="0.80000000000000004"/>
+                    </attributes>
+                    <style>
+                      <class name="overlay-text"/>
+                    </style>
+                  </object>
+                  <packing>
+                    <property name="expand">False</property>
+                    <property name="fill">True</property>
+                    <property name="position">2</property>
+                  </packing>
+                </child>
               </object>
               <packing>
                 <property name="expand">False</property>

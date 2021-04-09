@@ -28,58 +28,37 @@ class Search:
 
     def __init__(self, **kwargs):
         self.app_window = kwargs.get('app_window', None)
-        self.query = kwargs.get('query', None)
-
-        self.do_search()
-
-    def get_strong_instance(self):
-        # lookup instances, get a strong one, to be done (stubbed for now)
-        # get urls from api.invidious.io
-        # https://api.invidious.io/instances.json?sort_by=health
-        # api urls to confirm are strong (some throw forbidden)
-        # api/v1/videos/{videoId}
-        # api/v1/search/query
-        #self.instance = "https://ytprivate.com"
-        #self.instance = "https://vid.puffyan.us"
-        #self.instance = "https://iteroni.com/"
-        self.instance = "https://invidious.xyz"
 
     def clear_entries(self):
         children = self.app_window.results_list.get_children()
         for child in children:
             child.destroy()
 
-    def do_search(self):
-        self.get_strong_instance()
+    def do_search(self, query):
+        esc_query = GLib.uri_escape_string(query, None, None)
+        uri = f"{self.app_window.strong_instances[0]}/api/v1/search?q={esc_query};fields=title,videoId,author,lengthSeconds,videoThumbnails"
 
-        query = GLib.uri_escape_string(self.query, None, None)
-        uri = f"{self.instance}/api/v1/search?q={query};fields=title,videoId,author,lengthSeconds,videoThumbnails"
+        print(uri)
 
         self.session = Soup.Session.new()
         self.session.set_property("timeout", 5)
         message = Soup.Message.new("GET", uri)
         self.session.queue_message(message, self.show_results, message)
 
-    def show_error_box(self, heading, text):
-        self.app_window.error_box.set_visible(True)
-        self.app_window.error_heading.set_label(heading)
-        self.app_window.error_text.set_label(text)
-
     def show_results(self, session, result, message):
         self.clear_entries()
         self.app_window.spinner.set_visible(False)
 
         if message.status_code != 200:
-            self.show_error_box("Service Failure",
+            self.app_window.show_error_box("Service Failure",
                 "There is no response from the streaming servers.")
             return False
 
         try:
             self.json = json.loads(message.response_body.data)
         except:
-            self.show_error_box("Service Failure",
+            self.app_window.show_error_box("Service Failure",
                 "The streaming server response failed to parse results.")
-            print("json did not load from url results")
             return False
 
         self.get_poster_url()
@@ -96,7 +75,7 @@ class Search:
         # tweak json with local poster url
         for video_meta in self.json:
             # append the strong instance for results to use
-            video_meta['strong_instance'] = self.instance
+            video_meta['strong_instance'] = self.app_window.strong_instances[0]
             for poster in video_meta['videoThumbnails']:
                 if poster['quality'] == 'medium':
                     video_meta['poster_uri'] = poster['url']

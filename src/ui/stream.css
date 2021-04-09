@@ -17,12 +17,22 @@
   background-color: black;
 }
 
-button.rounded-button {
-  padding: 4px;
+.overlay-text {
+  padding-top: 2px;
+  padding-left: 6px;
+  padding-right: 6px;
+  padding-bottom: 2px;
+  background-color: white;
   border-radius: 9999px;
   -gtk-outline-radius: 9999px;
+}
+
+button.rounded-button {
+  padding: 4px;
   min-width: 24px;
   min-height: 24px;
+  border-radius: 9999px;
+  -gtk-outline-radius: 9999px;
 }
 
 button.large {
