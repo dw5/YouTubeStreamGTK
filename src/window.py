@@ -60,7 +60,7 @@ class StreamWindow(Handy.ApplicationWindow):
         # insert spinner
         search_query = search_box.get_text()
 
-        if self.strong_instances[0]:
+        if self.strong_instances:
             search = Search(app_window = self)
             search.do_search(query = search_query)
         else:
@@ -73,6 +73,15 @@ class StreamWindow(Handy.ApplicationWindow):
 #        if key == "k":
 #            # do stuff
 
+    @Gtk.Template.Callback()
+    def swallow_fullscreen_scroll_event(self, event, data):
+        if self.is_fullscreen:
+            return True
+
+    def pause_all(self):
+        flowboxes = self.results_list.get_children()
+        for flowbox in flowboxes:
+            flowbox.get_child().pause_button(None)
 
     def hide_error_box(self):
         self.error_box.set_visible(False)
@@ -88,6 +97,7 @@ class StreamWindow(Handy.ApplicationWindow):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
 
+        self.is_fullscreen = False
         self.strong_instances = []
         instances = Instances(app_window = self)
         instances.get_strong_instances()

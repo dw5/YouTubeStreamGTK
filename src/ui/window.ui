@@ -139,6 +139,7 @@
                     <property name="hexpand">False</property>
                     <property name="vexpand">False</property>
                     <property name="hscrollbar-policy">never</property>
+                    <signal name="scroll-event" handler="swallow_fullscreen_scroll_event" swapped="no"/>
                     <child>
                       <object class="GtkFlowBox" id="results_list">
                         <property name="can-focus">False</property>
@@ -160,7 +161,7 @@
                 </child>
               <child>
                 <object class="GtkBox" id="error_box">
-                  <property name="visible">False</property>
+                  <property name="visible">True</property>
                   <property name="can-focus">False</property>
                   <property name="halign">center</property>
                   <property name="valign">center</property>

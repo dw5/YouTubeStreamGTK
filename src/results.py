@@ -30,6 +30,8 @@ Gst.init()
 Gst.init_check()
 Handy.init()
 
+import time
+
 @Gtk.Template(resource_path='/sm/puri/Stream/ui/results.ui')
 class ResultsBox(Gtk.Box):
     __gtype_name__ = 'ResultsBox'
@@ -63,6 +65,7 @@ class ResultsBox(Gtk.Box):
         super().__init__(**kwargs)
 
         self.app_window = app_window
+        self.is_playing = False
 
         # listen for motion on the player box for controls show/hide
         self.event_box.add_events(Gdk.EventMask.POINTER_MOTION_MASK)
@@ -98,7 +101,11 @@ class ResultsBox(Gtk.Box):
         return readable_seconds
 
     def on_file_read(self, poster_file, async_res, user_data):
-        stream = poster_file.read_finish(async_res)
+        try:
+            stream = poster_file.read_finish(async_res)
+        except GLib.Error as e:
+            return False
+
         GdkPixbuf.Pixbuf.new_from_stream_at_scale_async(stream,
                 self.video_box_width, self.video_box_height,
                 True,                # preserve_aspect_ratio
@@ -116,6 +123,16 @@ class ResultsBox(Gtk.Box):
     def stream_at_scale_async(self, poster_file):
         stream = poster_file.read_async(GLib.PRIORITY_DEFAULT, None,
                 self.on_file_read, None)
+
+    def check_video_playable(self, video_url):
+        session = Soup.Session.new()
+        session.set_property("timeout", 2)
+        message = Soup.Message.new("HEAD", video_url)
+        session.queue_message(message, self.check_video_playable_cb, None)
+
+    def check_video_playable_cb(self, session, results, user_data):
+        if results.status_code != 200:
+            self.set_visible(False)
 
     def parse_video_results(self, session, result, message):
         if message.status_code != 200:
@@ -143,6 +160,8 @@ class ResultsBox(Gtk.Box):
         if not self.video_uri:
             self.set_visible(False)
             return False
+
+        self.check_video_playable(self.video_uri)
 
         self.get_download_uris()
 
@@ -193,8 +212,6 @@ class ResultsBox(Gtk.Box):
                 remaining_seconds = int((duration - position) / Gst.SECOND)
                 viewed = self.get_readable_seconds(viewed_seconds)
                 remaining = self.get_readable_seconds(remaining_seconds)
-                print("Viewed: " + str(viewed))
-                print("Remaining: -" + str(remaining))
 
                 self.time_viewed.set_label(viewed)
                 self.time_remaining.set_label(f"-{remaining}")
@@ -222,7 +239,7 @@ class ResultsBox(Gtk.Box):
         try:
             dest_dir = GLib.get_user_special_dir(GLib.UserDirectory.DIRECTORY_MUSIC)
         except:
-            print("No Music Directory")
+            self.show_error_icon('audio')
             return False
 
         dest_title = self.strictify_name(self.video_title)
@@ -239,7 +256,7 @@ class ResultsBox(Gtk.Box):
         try:
             dest_dir = GLib.get_user_special_dir(GLib.UserDirectory.DIRECTORY_VIDEOS)
         except:
-            print("No Videos Directory")
+            self.show_error_icon('video')
             return False
 
         dest_title = self.strictify_name(self.video_title)
@@ -278,14 +295,12 @@ class ResultsBox(Gtk.Box):
 
     def progress_video_cb(self, current_num_bytes, total_num_bytes, *user_data):
         percentage = round(current_num_bytes / total_num_bytes * 100)
-        #print(f"Video Downloading: {percentage}%", end="\r")
 
     def ready_audio_cb(self, src, async_res, user_data):
         try:
             src.copy_finish(async_res)
         except GLib.Error as e:
             self.show_error_icon('audio')
-            print("Failed to write file stream ", e.message)
             return False
         self.show_success_icon('audio')
 
@@ -294,26 +309,26 @@ class ResultsBox(Gtk.Box):
             src.copy_finish(async_res)
         except GLib.Error as e:
             self.show_error_icon('video')
-            print("Failed to write file stream ", e.message)
             return False
         self.show_success_icon('video')
 
     @Gtk.Template.Callback()
     def audio_dl_button(self, button):
-        #print('requested to download ' + str(self.audio_dl_uri))
         self.audio_dl.set_sensitive(False)
         self.show_progress_icon('audio')
         self.download_audio_uri(self.audio_dl_uri)
 
     @Gtk.Template.Callback()
     def video_dl_button(self, button):
-        #print('requested to download ' + str(self.video_dl_uri))
         self.video_dl.set_sensitive(False)
         self.show_progress_icon('video')
         self.download_video_uri(self.video_dl_uri)
 
     @Gtk.Template.Callback()
     def play_button(self, button):
+        # loop through all child results pausing them
+        self.app_window.pause_all()
+
         self.play.set_visible(False)
         self.pause.set_visible(True)
         self.player.set_state(Gst.State.PLAYING)
@@ -346,44 +361,41 @@ class ResultsBox(Gtk.Box):
         self.poster_image.set_size_request(width, height)
         self.video_widget.set_size_request(width, height)
 
-    def visible_children(self, visible, child_to_match):
-        children = self.app_window.results_list.get_children()
-        for child in children:
-            if child == child_to_match:
-                child.set_visible(True)
-            else:
-                child.set_visible(visible)
-
     @Gtk.Template.Callback()
     def fullscreen_button(self, button):
         self.fullscreen.set_visible(False)
         self.unfullscreen.set_visible(True)
         self.app_window.fullscreen()
+        self.app_window.is_fullscreen = True
         self.app_window.search_bar_toggle.set_active(False)
         self.app_window.search_bar.set_visible(False)
         self.app_window.header_bar.set_visible(False)
-        self.visible_children(False, self.get_parent())
         self.details.set_visible(False)
 
         set_width = int(Gdk.Screen.get_default().get_width())
         set_height = int(Gdk.Screen.get_default().get_height())
         self.resize_player(set_width, set_height)
-        self.app_window.results_window.set_policy(Gtk.PolicyType.NEVER, Gtk.PolicyType.NEVER)
 
         results_context = self.get_style_context()
         results_context.remove_class("results")
         results_context.add_class("fullscreen")
+
+        # horizonal scrollbar, vertical scrollbar (do last)
+        self.app_window.results_window.set_policy(Gtk.PolicyType.NEVER, Gtk.PolicyType.EXTERNAL)
+
+        self.grab_focus()
 
     @Gtk.Template.Callback()
     def unfullscreen_button(self, button):
         self.fullscreen.set_visible(True)
         self.unfullscreen.set_visible(False)
         self.app_window.unfullscreen()
+        self.app_window.is_fullscreen = False
         self.app_window.search_bar_toggle.set_active(True)
         self.app_window.search_bar.set_visible(True)
         self.app_window.header_bar.set_visible(True)
-        self.visible_children(True, None)
         self.details.set_visible(True)
+
         results_context = self.get_style_context()
         results_context.remove_class("fullscreen")
         results_context.add_class("results")
@@ -394,6 +406,8 @@ class ResultsBox(Gtk.Box):
         self.resize_player(set_width, set_height)
         self.app_window.resize(self.app_orig_width, self.app_orig_height)
         self.app_window.results_window.set_policy(Gtk.PolicyType.NEVER, Gtk.PolicyType.AUTOMATIC)
+
+        self.grab_focus()
 
     @Gtk.Template.Callback()
     def seek_slider(self, scale):
@@ -411,7 +425,13 @@ class ResultsBox(Gtk.Box):
                 self.controls_box.set_visible(False)
 
     @Gtk.Template.Callback()
-    def mouse_move(self, event, data):
+    def event_box_mouse_click(self, event, data):
+        if self.is_playing:
+            self.pause_button(None)
+        self.event_box_mouse_action(event, data)
+
+    @Gtk.Template.Callback()
+    def event_box_mouse_action(self, event, data):
         self.last_move = int(GLib.get_current_time())
         GLib.timeout_add_seconds(2, self.poll_mouse)
         if not self.controls_box.get_visible():

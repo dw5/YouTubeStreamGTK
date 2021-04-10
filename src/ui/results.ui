@@ -9,7 +9,7 @@
   </object>
   <template class="ResultsBox" parent="GtkBox">
     <property name="visible">True</property>
-    <property name="can-focus">False</property>
+    <property name="can-focus">True</property>
     <property name="halign">center</property>
     <property name="valign">start</property>
     <property name="orientation">vertical</property>
@@ -18,7 +18,7 @@
     <child>
       <object class="GtkOverlay" id="video_overlay">
         <property name="visible">True</property>
-        <property name="can-focus">False</property>
+        <property name="can-focus">True</property>
         <property name="halign">center</property>
         <property name="valign">center</property>
         <child>
@@ -57,8 +57,8 @@
             <property name="hexpand">True</property>
             <property name="vexpand">True</property>
             <property name="above-child">True</property>
-            <signal name="enter-notify-event" handler="mouse_enter" swapped="no"/>
-            <signal name="motion-notify-event" handler="mouse_move" swapped="no"/>
+            <signal name="button-press-event" handler="event_box_mouse_click" swapped="no"/>
+            <signal name="motion-notify-event" handler="event_box_mouse_action" swapped="no"/>
             <child>
               <placeholder/>
             </child>
