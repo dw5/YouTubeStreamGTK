@@ -65,7 +65,6 @@ class ResultsBox(Gtk.Box):
         super().__init__(**kwargs)
 
         self.app_window = app_window
-        self.is_playing = False
 
         # listen for motion on the player box for controls show/hide
         self.event_box.add_events(Gdk.EventMask.POINTER_MOTION_MASK)
@@ -194,7 +193,7 @@ class ResultsBox(Gtk.Box):
         self.get_video_details()
 
     def update_slider(self):
-        if not self.is_playing:
+        if not self.app_window.is_playing:
             return False
         else:
             success, duration = self.player.query_duration(Gst.Format.TIME)
@@ -332,7 +331,7 @@ class ResultsBox(Gtk.Box):
         self.play.set_visible(False)
         self.pause.set_visible(True)
         self.player.set_state(Gst.State.PLAYING)
-        self.is_playing = True
+        self.app_window.is_playing = True
 
         # hide the poster, show the video
         self.player_box.show_all()
@@ -351,7 +350,7 @@ class ResultsBox(Gtk.Box):
         self.play.set_visible(True)
         self.pause.set_visible(False)
         self.player.set_state(Gst.State.PAUSED)
-        self.is_playing = False
+        self.app_window.is_playing = False
 
     @Gtk.Template.Callback()
     def speed_button(self, button):
@@ -426,7 +425,7 @@ class ResultsBox(Gtk.Box):
 
     @Gtk.Template.Callback()
     def event_box_mouse_click(self, event, data):
-        if self.is_playing:
+        if self.app_window.is_playing:
             self.pause_button(None)
         self.event_box_mouse_action(event, data)
 

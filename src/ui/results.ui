@@ -25,7 +25,6 @@
           <object class="GtkBox" id="player_box">
             <property name="visible">True</property>
             <property name="can-focus">True</property>
-            <property name="receives-default">True</property>
             <property name="halign">center</property>
             <property name="valign">center</property>
             <property name="orientation">vertical</property>
@@ -70,7 +69,7 @@
         <child type="overlay">
           <object class="GtkBox" id="controls_box">
             <property name="visible">True</property>
-            <property name="can-focus">True</property>
+            <property name="can-focus">False</property>
             <property name="valign">end</property>
             <property name="vexpand">True</property>
             <property name="orientation">vertical</property>
@@ -91,7 +90,6 @@
                         <property name="visible">True</property>
                         <property name="sensitive">False</property>
                         <property name="can-focus">True</property>
-                        <property name="receives-default">True</property>
                         <property name="tooltip-text" translatable="yes">Save Audio</property>
                         <property name="opacity">0.80</property>
                         <property name="halign">center</property>
@@ -119,7 +117,6 @@
                         <property name="visible">True</property>
                         <property name="sensitive">False</property>
                         <property name="can-focus">True</property>
-                        <property name="receives-default">True</property>
                         <property name="tooltip-text" translatable="yes">Save Video</property>
                         <property name="opacity">0.80</property>
                         <property name="halign">center</property>
@@ -162,8 +159,7 @@
                         <child>
                           <object class="GtkButton" id="play">
                             <property name="visible">True</property>
-                            <property name="can-focus">True</property>
-                            <property name="receives-default">True</property>
+                            <property name="can-focus">False</property>
                             <property name="tooltip-text" translatable="yes">Play</property>
                             <property name="opacity">0.80</property>
                             <property name="halign">center</property>
@@ -188,9 +184,8 @@
                         </child>
                         <child>
                           <object class="GtkButton" id="pause">
-                            <property name="visible">True</property>
-                            <property name="can-focus">True</property>
-                            <property name="receives-default">True</property>
+                            <property name="visible">False</property>
+                            <property name="can-focus">False</property>
                             <property name="tooltip-text" translatable="yes">Pause</property>
                             <property name="opacity">0.80</property>
                             <property name="halign">center</property>
@@ -238,7 +233,6 @@
                         <property name="visible">True</property>
                         <property name="sensitive">False</property>
                         <property name="can-focus">True</property>
-                        <property name="receives-default">True</property>
                         <property name="tooltip-text" translatable="yes">Adjust Speed</property>
                         <property name="opacity">0.80</property>
                         <property name="halign">center</property>
@@ -274,7 +268,6 @@
                           <object class="GtkButton" id="fullscreen">
                             <property name="visible">True</property>
                             <property name="can-focus">True</property>
-                            <property name="receives-default">True</property>
                             <property name="tooltip-text" translatable="yes">Fullscreen</property>
                             <property name="opacity">0.80</property>
                             <property name="halign">center</property>
@@ -298,7 +291,6 @@
                         <child>
                           <object class="GtkButton" id="unfullscreen">
                             <property name="can-focus">True</property>
-                            <property name="receives-default">True</property>
                             <property name="tooltip-text" translatable="yes">Unfullscreen</property>
                             <property name="opacity">0.80</property>
                             <property name="halign">center</property>

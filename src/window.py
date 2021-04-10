@@ -66,12 +66,29 @@ class StreamWindow(Handy.ApplicationWindow):
         else:
             self.show_error_box("Service Failure",
                 "No strong video server instances found yet. Try again shortly.")
+    def fullscreen_toggle(self, focus_child):
+        if self.is_fullscreen:
+            focus_child.get_child().unfullscreen_button(None)
+        else:
+            focus_child.get_child().fullscreen_button(None)
 
-#    @Gtk.Template.Callback()
-#    def keypress_listener(self, widget, ev):
-#        key = Gdk.keyval_name(ev.keyval)
-#        if key == "k":
-#            # do stuff
+    def play_pause_toggle(self, focus_child):
+        if self.is_playing:
+            self.pause_all()
+        else:
+            focus_child.get_child().play_button(None)
+
+    @Gtk.Template.Callback()
+    def keypress_listener(self, widget, ev):
+        key = Gdk.keyval_name(ev.keyval)
+        focus_child = self.results_list.get_focus_child()
+        if focus_child:
+            if key == "Escape":
+                focus_child.get_child().unfullscreen_button(None)
+            if key == "space":
+                self.play_pause_toggle(focus_child)
+            if key == "f":
+                self.fullscreen_toggle(focus_child)
 
     @Gtk.Template.Callback()
     def swallow_fullscreen_scroll_event(self, event, data):
@@ -97,6 +114,7 @@ class StreamWindow(Handy.ApplicationWindow):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
 
+        self.is_playing = False
         self.is_fullscreen = False
         self.strong_instances = []
         instances = Instances(app_window = self)
