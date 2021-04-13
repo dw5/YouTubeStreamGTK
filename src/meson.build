@@ -27,10 +27,13 @@ configure_file(
 
 stream_sources = [
   '__init__.py',
+  'help.py',
   'main.py',
+  'menu.py',
+  'about.py',
   'window.py',
-  'results.py',
   'search.py',
+  'results.py',
   'instances.py',
 ]
 

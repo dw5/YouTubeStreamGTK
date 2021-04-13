@@ -36,7 +36,6 @@ class Instances:
         # get urls of instances from api.invidious.io
         uri = f"https://api.invidious.io/instances.json?sort_by=health"
 
-        print("0: " + uri)
         session = Soup.Session.new()
         session.set_property("timeout", 10)
         message = Soup.Message.new("GET", uri)
@@ -68,7 +67,6 @@ class Instances:
         # /api/v1/search?q=query
         # /api/v1/search?q=Librem%205;fields=type
         search_uri = f"{uri}/api/v1/search?q=Librem%205;fields=type"
-        print("1: " + search_uri)
         session = Soup.Session.new()
         session.set_property("timeout", 2)
         message = Soup.Message.new("GET", search_uri)
@@ -95,7 +93,6 @@ class Instances:
         # /api/v1/videos/{videoId}
         # /api/v1/videos/cAUNrY_qPCg?fields=type
         fs_uri = f"{uri}/api/v1/videos/cAUNrY_qPCg?fields=formatStreams"
-        print("2: " + fs_uri)
         session = Soup.Session.new()
         session.set_property("timeout", 2)
         message = Soup.Message.new("GET", fs_uri)
@@ -124,7 +121,6 @@ class Instances:
         session.queue_message(message, self.check_video_valid_cb, uri)
 
     def check_video_valid_cb(self, session, results, uri):
-        print(results.status_code)
         if results.status_code != 200:
             return False
 

@@ -27,6 +27,7 @@ import json
 
 from .search import Search
 from .instances import Instances
+from .menu import Menu
 
 @Gtk.Template(resource_path='/sm/puri/Stream/ui/window.ui')
 class StreamWindow(Handy.ApplicationWindow):
@@ -36,6 +37,8 @@ class StreamWindow(Handy.ApplicationWindow):
 
     search_bar_toggle = Gtk.Template.Child()
     search_bar = Gtk.Template.Child()
+
+    menu_button = Gtk.Template.Child()
 
     status_page = Gtk.Template.Child()
     spinner = Gtk.Template.Child()
@@ -78,6 +81,10 @@ class StreamWindow(Handy.ApplicationWindow):
         else:
             focus_child.get_child().play_button(None)
 
+#    @Gtk.Template.Callback()
+#    def open_primary_menu(self, widget, ev):
+#        print("in open primary menu")
+
     @Gtk.Template.Callback()
     def keypress_listener(self, widget, ev):
         key = Gdk.keyval_name(ev.keyval)
@@ -119,6 +126,9 @@ class StreamWindow(Handy.ApplicationWindow):
         self.strong_instances = []
         instances = Instances(app_window = self)
         instances.get_strong_instances()
+
+        menu = Menu(app_window = self)
+        self.menu_button.set_popover(menu)
 
         provider = Gtk.CssProvider()
         provider.load_from_resource('/sm/puri/Stream/ui/stream.css')

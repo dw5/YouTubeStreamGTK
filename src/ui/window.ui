@@ -9,6 +9,7 @@
     <property name="vexpand">True</property>
     <property name="default-width">882</property>
     <property name="default-height">652</property>
+    <property name="icon-name">sm.puri.Stream</property>
     <signal name="key-press-event" handler="keypress_listener" swapped="no"/>
     <child>
       <object class="GtkBox">
@@ -25,7 +26,6 @@
               <object class="GtkToggleButton" id="search_bar_toggle">
                 <property name="visible">True</property>
                 <property name="can-focus">True</property>
-                <property name="receives-default">False</property>
                 <property name="tooltip-text" translatable="yes">Search</property>
                 <property name="valign">center</property>
                 <property name="active">True</property>
@@ -44,11 +44,56 @@
               </object>
             </child>
             <child>
-              <object class="GtkMenuButton">
+              <object class="GtkButton" id="results_previous">
                 <property name="visible">True</property>
                 <property name="can-focus">True</property>
-                <property name="receives-default">False</property>
-                <property name="action-name">win.open-primary-menu</property>
+                <property name="tooltip-text" translatable="yes">Previous</property>
+                <property name="valign">center</property>
+                <property name="sensitive">False</property>
+                <signal name="clicked" handler="show_previous_results" swapped="no"/>
+                <child>
+                  <object class="GtkImage">
+                    <property name="visible">True</property>
+                    <property name="can-focus">False</property>
+                    <property name="icon-name">go-previous-symbolic</property>
+                    <property name="icon_size">1</property>
+                  </object>
+                </child>
+                <style>
+                  <class name="image-button"/>
+                </style>
+              </object>
+            </child>
+            <child>
+              <object class="GtkButton" id="results_next">
+                <property name="visible">True</property>
+                <property name="can-focus">True</property>
+                <property name="tooltip-text" translatable="yes">Next</property>
+                <property name="valign">center</property>
+                <property name="sensitive">False</property>
+                <signal name="clicked" handler="show_next_results" swapped="no"/>
+                <child>
+                  <object class="GtkImage">
+                    <property name="visible">True</property>
+                    <property name="can-focus">False</property>
+                    <property name="icon-name">go-next-symbolic</property>
+                    <property name="icon_size">1</property>
+                  </object>
+                </child>
+                <style>
+                  <class name="image-button"/>
+                </style>
+              </object>
+              <packing>
+                <property name="pack-type">end</property>
+                <property name="position">2</property>
+              </packing>
+            </child>
+            <child>
+              <object class="GtkMenuButton" id="menu_button">
+                <property name="visible">True</property>
+                <property name="can-focus">True</property>
+                <property name="tooltip-text" translatable="yes">Menu</property>
                 <child>
                   <object class="GtkImage">
                     <property name="visible">True</property>

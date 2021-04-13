@@ -38,8 +38,6 @@ class Search:
         esc_query = GLib.uri_escape_string(query, None, None)
         uri = f"{self.app_window.strong_instances[0]}/api/v1/search?q={esc_query};fields=title,videoId,author,lengthSeconds,videoThumbnails"
 
-        print(uri)
-
         self.session = Soup.Session.new()
         self.session.set_property("timeout", 5)
         message = Soup.Message.new("GET", uri)

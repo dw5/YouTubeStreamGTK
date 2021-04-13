@@ -1,10 +1,13 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <gresources>
   <gresource prefix="/sm/puri/Stream">
+    <file>ui/help.ui</file>
+    <file>ui/menu.ui</file>
+    <file>ui/about.ui</file>
     <file>ui/window.ui</file>
     <file>ui/results.ui</file>
     <file>ui/stream.css</file>
     <file>ui/video-placeholder-332x186.png</file>
     <file alias="gtk/help-overlay.ui">ui/help-overlay.ui</file>
   </gresource>
-</gresources> 
+</gresources>

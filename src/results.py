@@ -26,8 +26,8 @@ from gi.repository import Gdk, GdkPixbuf, Gio, GLib, Gst, Gtk, Handy, Soup
 
 import json
 
-Gst.init()
-Gst.init_check()
+Gst.init(None)
+Gst.init_check(None)
 Handy.init()
 
 import time
