@@ -35,6 +35,7 @@ class ScrollerBox(Gtk.ScrolledWindow):
 
         self.app_window = app_window
         self.priority_index = priority_index
+        self.results_list.set_focus_vadjustment(self.props.vadjustment)
 
     def add_result(self, video_meta):
         results_box = ResultsBox(self.app_window, self.priority_index)
