@@ -33,7 +33,11 @@ stream_sources = [
   'about.py',
   'window.py',
   'search.py',
+
+  'iteroni.py',
+
   'results.py',
+  'scrollers.py',
   'instances.py',
 ]
 

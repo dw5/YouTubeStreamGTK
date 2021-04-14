@@ -61,10 +61,13 @@ class ResultsBox(Gtk.Box):
 
     window_to_player_box_padding = 28
 
-    def __init__(self, app_window, **kwargs):
+    def __init__(self, app_window, priority_index, **kwargs):
         super().__init__(**kwargs)
 
         self.app_window = app_window
+        self.priority = 0
+        if priority_index > 0:
+            self.priority = GLib.PRIORITY_LOW
 
         # listen for motion on the player box for controls show/hide
         self.event_box.add_events(Gdk.EventMask.POINTER_MOTION_MASK)
@@ -117,10 +120,9 @@ class ResultsBox(Gtk.Box):
 
         self.poster_image.clear()
         self.poster_image.set_from_pixbuf(pixbuf)
-        self.poster_image.set_visible(True)
 
     def stream_at_scale_async(self, poster_file):
-        stream = poster_file.read_async(GLib.PRIORITY_DEFAULT, None,
+        stream = poster_file.read_async(self.priority, None,
                 self.on_file_read, None)
 
     def check_video_playable(self, video_url):
@@ -245,7 +247,7 @@ class ResultsBox(Gtk.Box):
         dest_path = f"{dest_dir}/{dest_title}.{dest_ext}"
         dest = Gio.File.new_for_path(dest_path)
         dl_stream.copy_async(dest, Gio.FileCopyFlags.OVERWRITE,
-                GLib.PRIORITY_DEFAULT, None,
+                GLib.PRIORITY_LOW, None,
                 self.progress_audio_cb, (),
                 self.ready_audio_cb, None)
 
@@ -265,7 +267,7 @@ class ResultsBox(Gtk.Box):
         dl_stream.copy_async(dest,
                 # bitwise or (not tuple) for multiple flags
                 Gio.FileCopyFlags.OVERWRITE|Gio.FileCopyFlags.ALL_METADATA|Gio.FileCopyFlags.TARGET_DEFAULT_PERMS,
-                GLib.PRIORITY_DEFAULT, None,
+                GLib.PRIORITY_LOW, None,
                 self.progress_video_cb, (),
                 self.ready_video_cb, None)
 
@@ -380,7 +382,8 @@ class ResultsBox(Gtk.Box):
         results_context.add_class("fullscreen")
 
         # horizonal scrollbar, vertical scrollbar (do last)
-        self.app_window.results_window.set_policy(Gtk.PolicyType.NEVER, Gtk.PolicyType.EXTERNAL)
+        scroller = self.app_window.scroller_stack.get_visible_child()
+        scroller.set_policy(Gtk.PolicyType.NEVER, Gtk.PolicyType.EXTERNAL)
 
         self.grab_focus()
 
@@ -404,7 +407,9 @@ class ResultsBox(Gtk.Box):
 
         self.resize_player(set_width, set_height)
         self.app_window.resize(self.app_orig_width, self.app_orig_height)
-        self.app_window.results_window.set_policy(Gtk.PolicyType.NEVER, Gtk.PolicyType.AUTOMATIC)
+
+        scroller = self.app_window.scroller_stack.get_visible_child()
+        scroller.set_policy(Gtk.PolicyType.NEVER, Gtk.PolicyType.AUTOMATIC)
 
         self.grab_focus()
 

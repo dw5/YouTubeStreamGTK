@@ -125,3 +125,4 @@ class Instances:
             return False
 
         self.app_window.strong_instances.append(uri)
+        self.app_window.navigation_current.set_property('icon-name', 'object-select-symbolic')

@@ -32,11 +32,15 @@
               <object class="GtkImage" id="poster_image">
                 <property name="width-request">332</property>
                 <property name="height-request">186</property>
+                <property name="visible">True</property>
                 <property name="sensitive">False</property>
                 <property name="can-focus">False</property>
                 <property name="halign">center</property>
                 <property name="valign">center</property>
                 <property name="resource">/sm/puri/Stream/ui/video-placeholder-332x186.png</property>
+                <style>
+                  <class name="poster-placeholder-image"/>
+                </style>
               </object>
               <packing>
                 <property name="expand">True</property>

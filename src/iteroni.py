@@ -1,4 +1,4 @@
-# search.py
+# iteroni.py
 #
 # Copyright 2021 Todd Weaver
 #
@@ -24,24 +24,15 @@ import json
 class Search:
 
     def __init__(self, **kwargs):
-        # for internal plugins only
-        self.app_window = kwargs.get('app_window', None)
-        self.instance_index = kwargs.get('instance_index', None)
-        self.sort_by = kwargs.get('sort_by', None)
-        self.scroller_stack = kwargs.get('scroller_stack', None)
-        self.spinner = kwargs.get('spinner', None)
-
-        # limited access
         self.add_result = kwargs.get('add_result', None)
         self.set_headerbar_color = kwargs.get('set_headerbar_color', None)
+        self.hide_scroller_error_box = kwargs.get('hide_scroller_error_box', None)
+        self.show_scroller_error_box = kwargs.get('show_scroller_error_box', None)
 
     def do_search(self, query):
         esc_query = GLib.uri_escape_string(query, None, None)
-        this_instance = self.app_window.strong_instances[0]
-        if self.instance_index and len(self.app_window.strong_instances) > self.instance_index:
-            this_instance = self.app_window.strong_instances[self.instance_index]
-
-        uri = f"{this_instance}/api/v1/search?q={esc_query};sort_by={self.sort_by};fields=title,videoId,author,lengthSeconds,videoThumbnails"
+        self.this_instance = 'https://iteroni.com'
+        uri = f"{self.this_instance}/api/v1/search?q={esc_query};fields=title,videoId,author,lengthSeconds,videoThumbnails"
 
         self.session = Soup.Session.new()
         self.session.set_property("timeout", 5)
@@ -49,33 +40,35 @@ class Search:
         self.session.queue_message(message, self.show_results, message)
 
     def show_results(self, session, result, message):
-        self.spinner.set_visible(False)
-
         if message.status_code != 200:
-            self.app_window.show_error_box("Service Failure",
-                "There is no response from the streaming servers.")
+            self.show_scroller_error_box("Service Failure",
+                "There is no response from the this server.")
             return False
 
         try:
             self.json = json.loads(message.response_body.data)
         except:
-            self.app_window.show_error_box("Service Failure",
-                "The streaming server response failed to parse results.")
+            self.show_scroller_error_box("Service Failure",
+                "This server response failed to parse results.")
             return False
+
+        self.hide_scroller_error_box()
 
         self.get_poster_url()
 
         for video_meta in self.json:
             self.add_result(video_meta)
 
-        self.scroller_stack.set_visible(True)
         self.set_headerbar_color()
 
     def get_poster_url(self):
         # tweak json with local poster url
         for video_meta in self.json:
             # append the strong instance for results to use
-            video_meta['strong_instance'] = self.app_window.strong_instances[0]
+            video_meta['strong_instance'] = self.this_instance
             for poster in video_meta['videoThumbnails']:
                 if poster['quality'] == 'medium':
-                    video_meta['poster_uri'] = poster['url']
+                    if poster['url'].startswith('/'):
+                        video_meta['poster_uri'] = f"{self.this_instance}{poster['url']}"
+                    else:
+                        video_meta['poster_uri'] = poster['url']

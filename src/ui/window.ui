@@ -44,50 +44,69 @@
               </object>
             </child>
             <child>
-              <object class="GtkButton" id="results_previous">
+              <object class="GtkBox" id="navigation_buttons">
                 <property name="visible">True</property>
-                <property name="can-focus">True</property>
-                <property name="tooltip-text" translatable="yes">Previous</property>
+                <property name="can-focus">False</property>
+                <property name="halign">center</property>
                 <property name="valign">center</property>
-                <property name="sensitive">False</property>
-                <signal name="clicked" handler="show_previous_results" swapped="no"/>
+                <property name="orientation">horizontal</property>
                 <child>
-                  <object class="GtkImage">
+                  <object class="GtkButton" id="navigation_previous">
+                    <property name="visible">True</property>
+                    <property name="can-focus">True</property>
+                    <property name="tooltip-text" translatable="yes">Previous</property>
+                    <property name="valign">center</property>
+                    <property name="sensitive">False</property>
+                    <signal name="clicked" handler="show_previous_results" swapped="no"/>
+                    <child>
+                      <object class="GtkImage">
+                        <property name="visible">True</property>
+                        <property name="can-focus">False</property>
+                        <property name="icon-name">go-previous-symbolic</property>
+                        <property name="icon_size">1</property>
+                      </object>
+                    </child>
+                    <style>
+                      <class name="navigation-previous" />
+                    </style>
+                  </object>
+                </child>
+                <child>
+                  <object class="GtkImage" id="navigation_current">
                     <property name="visible">True</property>
                     <property name="can-focus">False</property>
-                    <property name="icon-name">go-previous-symbolic</property>
+                    <property name="icon-name">content-loading-symbolic</property>
                     <property name="icon_size">1</property>
+                    <style>
+                      <class name="navigation-current" />
+                    </style>
+                  </object>
+                </child>
+                <child>
+                  <object class="GtkButton" id="navigation_next">
+                    <property name="visible">True</property>
+                    <property name="can-focus">True</property>
+                    <property name="tooltip-text" translatable="yes">Next</property>
+                    <property name="valign">center</property>
+                    <property name="sensitive">False</property>
+                    <signal name="clicked" handler="show_next_results" swapped="no"/>
+                    <child>
+                      <object class="GtkImage">
+                        <property name="visible">True</property>
+                        <property name="can-focus">False</property>
+                        <property name="icon-name">go-next-symbolic</property>
+                        <property name="icon_size">1</property>
+                      </object>
+                    </child>
+                    <style>
+                      <class name="navigation-next" />
+                    </style>
                   </object>
                 </child>
                 <style>
-                  <class name="image-button"/>
+                  <class name="navbuttons" />
                 </style>
-              </object>
-            </child>
-            <child>
-              <object class="GtkButton" id="results_next">
-                <property name="visible">True</property>
-                <property name="can-focus">True</property>
-                <property name="tooltip-text" translatable="yes">Next</property>
-                <property name="valign">center</property>
-                <property name="sensitive">False</property>
-                <signal name="clicked" handler="show_next_results" swapped="no"/>
-                <child>
-                  <object class="GtkImage">
-                    <property name="visible">True</property>
-                    <property name="can-focus">False</property>
-                    <property name="icon-name">go-next-symbolic</property>
-                    <property name="icon_size">1</property>
-                  </object>
-                </child>
-                <style>
-                  <class name="image-button"/>
-                </style>
-              </object>
-              <packing>
-                <property name="pack-type">end</property>
-                <property name="position">2</property>
-              </packing>
+             </object>
             </child>
             <child>
               <object class="GtkMenuButton" id="menu_button">
@@ -178,87 +197,73 @@
                   </packing>
                 </child>
                 <child>
-                  <object class="GtkScrolledWindow" id="results_window">
+                  <object class="GtkStack" id="scroller_stack">
                     <property name="visible">False</property>
                     <property name="can-focus">False</property>
-                    <property name="hexpand">False</property>
-                    <property name="vexpand">False</property>
-                    <property name="hscrollbar-policy">never</property>
-                    <signal name="scroll-event" handler="swallow_fullscreen_scroll_event" swapped="no"/>
+                    <property name="transition-type">slide-left-right</property>
                     <child>
-                      <object class="GtkFlowBox" id="results_list">
-                        <property name="can-focus">False</property>
-                        <property name="visible">True</property>
-                        <property name="vexpand">False</property>
-                        <property name="hexpand">False</property>
-                        <property name="max-children-per-line">1</property>
-                        <property name="selection-mode">none</property>
-                        <property name="activate-on-single-click">False</property>
-                        <child>
-                          <placeholder/>
-                        </child>
-                      </object>
+                      <placeholder/>
                     </child>
                   </object>
                   <packing>
                     <property name="position">4</property>
                   </packing>
                 </child>
-              <child>
-                <object class="GtkBox" id="error_box">
-                  <property name="visible">True</property>
-                  <property name="can-focus">False</property>
-                  <property name="halign">center</property>
-                  <property name="valign">center</property>
-                  <property name="orientation">vertical</property>
-                  <child>
-                    <object class="GtkImage" id="error_image">
-                      <property name="visible">True</property>
-                      <property name="can-focus">False</property>
-                      <property name="icon-name">network-error-symbolic</property>
-                      <property name="icon_size">6</property>
-                    </object>
-                    <packing>
-                      <property name="expand">False</property>
-                      <property name="fill">True</property>
-                      <property name="position">0</property>
-                    </packing>
-                  </child>
-                  <child>
-                    <object class="GtkLabel" id="error_heading">
-                      <property name="visible">True</property>
-                      <property name="can-focus">False</property>
-                      <property name="margin-top">12</property>
-                      <property name="label" translatable="yes">Error</property>
-                      <attributes>
-                        <attribute name="weight" value="bold"/>
-                        <attribute name="scale" value="1.2"/>
-                      </attributes>
-                    </object>
-                    <packing>
-                      <property name="expand">False</property>
-                      <property name="fill">True</property>
-                      <property name="position">1</property>
-                    </packing>
-                  </child>
-                  <child>
-                    <object class="GtkLabel" id="error_text">
-                      <property name="visible">True</property>
-                      <property name="can-focus">False</property>
-                      <property name="margin-top">6</property>
-                      <property name="label" translatable="yes">...</property>
-                    </object>
-                    <packing>
-                      <property name="expand">False</property>
-                      <property name="fill">True</property>
-                      <property name="position">2</property>
-                    </packing>
-                  </child>
-                </object>
-                <packing>
-                  <property name="position">1</property>
-                </packing>
-              </child>
+                <child>
+                  <object class="GtkBox" id="error_box">
+                    <property name="visible">False</property>
+                    <property name="can-focus">False</property>
+                    <property name="halign">center</property>
+                    <property name="valign">center</property>
+                    <property name="orientation">vertical</property>
+                    <child>
+                      <object class="GtkImage" id="error_image">
+                        <property name="visible">True</property>
+                        <property name="can-focus">False</property>
+                        <property name="icon-name">network-error-symbolic</property>
+                        <property name="icon_size">6</property>
+                      </object>
+                      <packing>
+                        <property name="expand">False</property>
+                        <property name="fill">True</property>
+                        <property name="position">0</property>
+                      </packing>
+                    </child>
+                    <child>
+                      <object class="GtkLabel" id="error_heading">
+                        <property name="visible">True</property>
+                        <property name="can-focus">False</property>
+                        <property name="margin-top">12</property>
+                        <property name="label" translatable="yes">Error</property>
+                        <attributes>
+                          <attribute name="weight" value="bold"/>
+                          <attribute name="scale" value="1.2"/>
+                        </attributes>
+                      </object>
+                      <packing>
+                        <property name="expand">False</property>
+                        <property name="fill">True</property>
+                        <property name="position">1</property>
+                      </packing>
+                    </child>
+                    <child>
+                      <object class="GtkLabel" id="error_text">
+                        <property name="visible">True</property>
+                        <property name="can-focus">False</property>
+                        <property name="margin-top">6</property>
+                        <property name="label" translatable="yes">...</property>
+                      </object>
+                      <packing>
+                        <property name="expand">False</property>
+                        <property name="fill">True</property>
+                        <property name="position">2</property>
+                      </packing>
+                    </child>
+                  </object>
+                  <packing>
+                    <property name="position">1</property>
+                  </packing>
+                </child>
               </object>
             </child>
            </object>
