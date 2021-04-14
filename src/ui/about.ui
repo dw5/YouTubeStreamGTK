@@ -7,7 +7,6 @@
     <property name="program-name">Stream</property>
     <property name="copyright" translatable="yes">Copyright 2021 Purism, SPC</property>
     <property name="authors">Todd Weaver</property>
-    <property name="documenters">Todd Weaver</property>
     <property name="artists">Todd Weaver</property>
     <property name="license-type">gpl-3-0</property>
     <signal name="response" handler="about_response" swapped="no"/>
