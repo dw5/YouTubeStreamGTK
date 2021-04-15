@@ -266,7 +266,9 @@ class ResultsBox(Gtk.Box):
         flags = Gio.FileCopyFlags
         dl_stream.copy_async(dest,
                 # bitwise or (not tuple) for multiple flags
-                Gio.FileCopyFlags.OVERWRITE|Gio.FileCopyFlags.ALL_METADATA|Gio.FileCopyFlags.TARGET_DEFAULT_PERMS,
+                Gio.FileCopyFlags.OVERWRITE |
+                Gio.FileCopyFlags.ALL_METADATA |
+                Gio.FileCopyFlags.TARGET_DEFAULT_PERMS,
                 GLib.PRIORITY_LOW, None,
                 self.progress_video_cb, (),
                 self.ready_video_cb, None)
@@ -332,8 +334,9 @@ class ResultsBox(Gtk.Box):
 
         self.play.set_visible(False)
         self.pause.set_visible(True)
-        self.player.set_state(Gst.State.PLAYING)
         self.app_window.is_playing = True
+        self.app_window.inhibit_app()
+        self.player.set_state(Gst.State.PLAYING)
 
         # hide the poster, show the video
         self.player_box.show_all()
@@ -348,17 +351,19 @@ class ResultsBox(Gtk.Box):
         GLib.timeout_add_seconds(1, self.update_slider)
 
     def null_out_player(self):
-        self.play.set_visible(True)
-        self.pause.set_visible(False)
+        self.inactivate_player()
         self.player.set_state(Gst.State.NULL)
-        self.app_window.is_playing = False
 
     @Gtk.Template.Callback()
     def pause_button(self, button):
+        self.inactivate_player()
+        self.player.set_state(Gst.State.PAUSED)
+
+    def inactivate_player(self):
         self.play.set_visible(True)
         self.pause.set_visible(False)
-        self.player.set_state(Gst.State.PAUSED)
         self.app_window.is_playing = False
+        self.app_window.uninhibit_app()
 
     @Gtk.Template.Callback()
     def speed_button(self, button):

@@ -184,6 +184,18 @@ class StreamWindow(Handy.ApplicationWindow):
                 for flowbox in flowboxes:
                     flowbox.get_child().null_out_player()
 
+    def inhibit_app(self):
+        self.application.inhibit(self,
+                Gtk.ApplicationInhibitFlags.IDLE |
+                Gtk.ApplicationInhibitFlags.LOGOUT,
+                "Stream-ing Video")
+
+    def uninhibit_app(self):
+        self.application.inhibit(self,
+                Gtk.ApplicationInhibitFlags.IDLE |
+                Gtk.ApplicationInhibitFlags.LOGOUT,
+                "Stream-ing Video")
+
     def hide_error_box(self):
         self.error_box.set_visible(False)
         self.error_heading.set_label("Error")
@@ -197,6 +209,7 @@ class StreamWindow(Handy.ApplicationWindow):
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
+        self.application = kwargs.get('application', None)
 
         self.is_playing = False
         self.is_fullscreen = False
