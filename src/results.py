@@ -362,6 +362,9 @@ class ResultsBox(Gtk.Box):
         self.poster_image.set_size_request(width, height)
         self.video_widget.set_size_request(width, height)
 
+    def delay_grab(self):
+        self.grab_focus()
+
     @Gtk.Template.Callback()
     def fullscreen_button(self, button):
         self.fullscreen.set_visible(False)
@@ -381,11 +384,14 @@ class ResultsBox(Gtk.Box):
         results_context.remove_class("results")
         results_context.add_class("fullscreen")
 
+        # grabbing happens before resize completes
+        # adding a slight delay to grab focus after resize completes
+        GLib.timeout_add(50, self.delay_grab)
+
         # horizonal scrollbar, vertical scrollbar (do last)
         scroller = self.app_window.scroller_stack.get_visible_child()
         scroller.set_policy(Gtk.PolicyType.NEVER, Gtk.PolicyType.EXTERNAL)
-
-        self.grab_focus()
+        scroller.set_kinetic_scrolling(False)
 
     @Gtk.Template.Callback()
     def unfullscreen_button(self, button):
@@ -410,6 +416,7 @@ class ResultsBox(Gtk.Box):
 
         scroller = self.app_window.scroller_stack.get_visible_child()
         scroller.set_policy(Gtk.PolicyType.NEVER, Gtk.PolicyType.AUTOMATIC)
+        scroller.set_kinetic_scrolling(True)
 
         self.grab_focus()
 
