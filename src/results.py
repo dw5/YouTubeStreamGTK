@@ -347,6 +347,12 @@ class ResultsBox(Gtk.Box):
         # update slider to track video time in slider
         GLib.timeout_add_seconds(1, self.update_slider)
 
+    def null_out_player(self):
+        self.play.set_visible(True)
+        self.pause.set_visible(False)
+        self.player.set_state(Gst.State.NULL)
+        self.app_window.is_playing = False
+
     @Gtk.Template.Callback()
     def pause_button(self, button):
         self.play.set_visible(True)

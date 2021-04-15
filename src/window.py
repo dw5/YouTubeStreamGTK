@@ -153,7 +153,7 @@ class StreamWindow(Handy.ApplicationWindow):
 
     def play_pause_toggle(self, focus_child):
         if self.is_playing:
-            self.pause_all()
+            focus_child.get_child().pause_button(None)
         else:
             focus_child.get_child().play_button(None)
 
@@ -182,7 +182,7 @@ class StreamWindow(Handy.ApplicationWindow):
             for scroller in scrollers:
                 flowboxes = scroller.results_list.get_children()
                 for flowbox in flowboxes:
-                    flowbox.get_child().pause_button(None)
+                    flowbox.get_child().null_out_player()
 
     def hide_error_box(self):
         self.error_box.set_visible(False)
