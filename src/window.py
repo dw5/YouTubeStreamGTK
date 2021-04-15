@@ -176,25 +176,25 @@ class StreamWindow(Handy.ApplicationWindow):
                     if key == "f":
                         self.fullscreen_toggle(focus_child)
 
-    def pause_all(self):
+    def pause_all(self, active_window):
         if self.scroller_stack:
             scrollers = self.scroller_stack.get_children()
             for scroller in scrollers:
                 flowboxes = scroller.results_list.get_children()
                 for flowbox in flowboxes:
-                    flowbox.get_child().null_out_player()
+                    result_window = flowbox.get_child()
+                    if result_window != active_window:
+                        flowbox.get_child().null_out_player()
 
     def inhibit_app(self):
-        self.application.inhibit(self,
+        self.inhibit_cookie = self.application.inhibit(self,
                 Gtk.ApplicationInhibitFlags.IDLE |
                 Gtk.ApplicationInhibitFlags.LOGOUT,
                 "Stream-ing Video")
 
     def uninhibit_app(self):
-        self.application.inhibit(self,
-                Gtk.ApplicationInhibitFlags.IDLE |
-                Gtk.ApplicationInhibitFlags.LOGOUT,
-                "Stream-ing Video")
+        if self.inhibit_cookie:
+            self.application.uninhibit(self.inhibit_cookie)
 
     def hide_error_box(self):
         self.error_box.set_visible(False)
@@ -213,6 +213,7 @@ class StreamWindow(Handy.ApplicationWindow):
 
         self.is_playing = False
         self.is_fullscreen = False
+        self.inhibit_cookie = 0
         self.strong_instances = []
         instances = Instances(app_window = self)
         instances.get_strong_instances()

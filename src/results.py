@@ -330,7 +330,7 @@ class ResultsBox(Gtk.Box):
     @Gtk.Template.Callback()
     def play_button(self, button):
         # loop through all child results pausing them
-        self.app_window.pause_all()
+        self.app_window.pause_all(self)
 
         self.play.set_visible(False)
         self.pause.set_visible(True)
