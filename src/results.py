@@ -217,6 +217,9 @@ class ResultsBox(Gtk.Box):
                 self.time_viewed.set_label(viewed)
                 self.time_remaining.set_label(f"-{remaining}")
 
+                if int(position / Gst.SECOND) >= int(duration / Gst.SECOND):
+                    self.null_out_player()
+
             # is negative number when not successful, so put it to 0
             if not success:
                 position_value = 0
