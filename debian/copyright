@@ -1,0 +1,12 @@
+Format: https://www.debian.org/doc/packaging-manuals/copyright-format/1.0/
+Upstream-Name: stream-0.1.0
+Upstream-Contact: Todd Weaver <todd@puri.sm>
+Source: https://source.puri.sm/todd/Stream
+
+Files: *
+Copyright: 2021 Purism, SPC <info@puri.sm>
+License: GPL-3+
+
+Files: debian/*
+Copyright: 2021 Purism, SPC <info@puri.sm>
+License: GPL-3+

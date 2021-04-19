@@ -1,0 +1,11 @@
+Package: stream-0.1.0
+Version: 1-1
+Architecture: all
+Maintainer: Todd Weaver <todd@puri.sm>
+Installed-Size: 133
+Depends: dconf-gsettings-backend | gsettings-backend, python3
+Section: video
+Priority: optional
+Homepage: https://source.puri.sm/todd/Stream
+Description: A web video player
+ A web video browser and player

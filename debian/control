@@ -1,0 +1,16 @@
+Source: stream-0.1.0
+Section: video
+Priority: optional
+Maintainer: Todd Weaver <todd@puri.sm>
+Build-Depends: debhelper-compat (= 13)
+Standards-Version: 4.5.1
+Homepage: https://source.puri.sm/todd/Stream
+Vcs-Browser: https://salsa.debian.org/debian/stream-0.1.0
+Vcs-Git: https://salsa.debian.org/debian/stream-0.1.0.git
+Rules-Requires-Root: no
+
+Package: stream-0.1.0
+Architecture: all
+Depends: ${shlibs:Depends}, ${misc:Depends}, python3
+Description: A web video player
+ A web video browser and player
