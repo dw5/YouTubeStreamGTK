@@ -62,6 +62,9 @@ class Instances:
                     not instance_uri.endswith('.i2p')):
                 self.check_query_api_valid(instance[1]['uri'])
 
+        # add a backup
+        self.check_query_api_valid('https://iteroni.com')
+
     # check the instance can run a query on the API
     def check_query_api_valid(self, uri):
         # /api/v1/search?q=query
@@ -125,4 +128,4 @@ class Instances:
             return False
 
         self.app_window.strong_instances.append(uri)
-        self.app_window.navigation_current.set_property('icon-name', 'object-select-symbolic')
+        self.app_window.status_icon.set_property('icon-name', 'object-select-symbolic')

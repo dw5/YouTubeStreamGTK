@@ -39,32 +39,11 @@ button.large {
   padding: 12px;
 }
 
-.navbuttons button {
-  margin: 0px;
-}
-button.navigation-previous {
-  border-top-right-radius: 0px;
-  border-bottom-right-radius: 0px;
-}
-button.navigation-next {
-  border-top-left-radius: 0px;
-  border-bottom-left-radius: 0px;
-}
-.navigation-current {
-  margin-top: 1px;
-  margin-bottom: 1px;
-  padding-left: 4px;
-  padding-right: 4px;
+.status-icon {
+  padding-left: 6px;
+  padding-right: 6px;
 }
 
 .poster-placeholder-image {
   background-color: #3d3846;
 }
-.color0 { background-color: #62a0ea; }
-.color1 { background-color: #57e389; }
-.color2 { background-color: #f8e45c; }
-.color3 { background-color: #ffa348; }
-.color4 { background-color: #ed333b; }
-.color5 { background-color: #c061cb; }
-.color6 { background-color: #b5835a; }
-.color7 { background-color: #77767b; }

@@ -44,69 +44,15 @@
               </object>
             </child>
             <child>
-              <object class="GtkBox" id="navigation_buttons">
+              <object class="GtkImage" id="status_icon">
                 <property name="visible">True</property>
                 <property name="can-focus">False</property>
-                <property name="halign">center</property>
-                <property name="valign">center</property>
-                <property name="orientation">horizontal</property>
-                <child>
-                  <object class="GtkButton" id="navigation_previous">
-                    <property name="visible">True</property>
-                    <property name="can-focus">True</property>
-                    <property name="tooltip-text" translatable="yes">Previous</property>
-                    <property name="valign">center</property>
-                    <property name="sensitive">False</property>
-                    <signal name="clicked" handler="show_previous_results" swapped="no"/>
-                    <child>
-                      <object class="GtkImage">
-                        <property name="visible">True</property>
-                        <property name="can-focus">False</property>
-                        <property name="icon-name">go-previous-symbolic</property>
-                        <property name="icon_size">1</property>
-                      </object>
-                    </child>
-                    <style>
-                      <class name="navigation-previous" />
-                    </style>
-                  </object>
-                </child>
-                <child>
-                  <object class="GtkImage" id="navigation_current">
-                    <property name="visible">True</property>
-                    <property name="can-focus">False</property>
-                    <property name="icon-name">content-loading-symbolic</property>
-                    <property name="icon_size">1</property>
-                    <style>
-                      <class name="navigation-current" />
-                    </style>
-                  </object>
-                </child>
-                <child>
-                  <object class="GtkButton" id="navigation_next">
-                    <property name="visible">True</property>
-                    <property name="can-focus">True</property>
-                    <property name="tooltip-text" translatable="yes">Next</property>
-                    <property name="valign">center</property>
-                    <property name="sensitive">False</property>
-                    <signal name="clicked" handler="show_next_results" swapped="no"/>
-                    <child>
-                      <object class="GtkImage">
-                        <property name="visible">True</property>
-                        <property name="can-focus">False</property>
-                        <property name="icon-name">go-next-symbolic</property>
-                        <property name="icon_size">1</property>
-                      </object>
-                    </child>
-                    <style>
-                      <class name="navigation-next" />
-                    </style>
-                  </object>
-                </child>
+                <property name="icon-name">content-loading-symbolic</property>
+                <property name="icon_size">1</property>
                 <style>
-                  <class name="navbuttons" />
+                  <class name="status-icon"/>
                 </style>
-             </object>
+              </object>
             </child>
             <child>
               <object class="GtkMenuButton" id="menu_button">
@@ -197,14 +143,29 @@
                   </packing>
                 </child>
                 <child>
-                  <object class="GtkStack" id="scroller_stack">
-                    <property name="visible">False</property>
-                    <property name="can-focus">False</property>
-                    <property name="transition-type">slide-left-right</property>
+                  <object class="GtkScrolledWindow" id="scroller">
+                    <property name="visible">True</property>
+                    <property name="can-focus">True</property>
+                    <property name="hexpand">False</property>
+                    <property name="vexpand">False</property>
+                    <property name="hscrollbar-policy">never</property>
+                    <signal name="scroll-event" handler="swallow_fullscreen_scroll_event" swapped="no"/>
+                    <signal name="edge-reached" handler="load_more" swapped="no"/>
                     <child>
-                      <placeholder/>
-                    </child>
-                  </object>
+                      <object class="GtkFlowBox" id="results_list">
+                        <property name="can-focus">True</property>
+                        <property name="visible">True</property>
+                        <property name="vexpand">False</property>
+                        <property name="hexpand">False</property>
+                        <property name="max-children-per-line">1</property>
+                        <property name="selection-mode">none</property>
+                        <property name="activate-on-single-click">False</property>
+                        <child>
+                          <placeholder/>
+                        </child>
+                      </object>
+		    </child>
+		  </object>
                   <packing>
                     <property name="position">4</property>
                   </packing>

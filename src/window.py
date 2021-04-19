@@ -23,24 +23,19 @@ from gi.repository import Gdk, Gtk, Handy
 
 Handy.init()
 
-import json
-
 from .menu import Menu
-from .scrollers import ScrollerBox
+from .results import ResultsBox
 from .instances import Instances
 
 # plugin style
 from .search import Search as DefaultSearch
-from .iteroni import Search as PluginSearch
 
 @Gtk.Template(resource_path='/sm/puri/Stream/ui/window.ui')
 class StreamWindow(Handy.ApplicationWindow):
     __gtype_name__ = 'StreamWindow'
 
     header_bar = Gtk.Template.Child()
-    navigation_previous = Gtk.Template.Child()
-    navigation_current = Gtk.Template.Child()
-    navigation_next = Gtk.Template.Child()
+    status_icon = Gtk.Template.Child()
 
     search_bar_toggle = Gtk.Template.Child()
     search_bar = Gtk.Template.Child()
@@ -53,22 +48,44 @@ class StreamWindow(Handy.ApplicationWindow):
     error_heading = Gtk.Template.Child()
     error_text = Gtk.Template.Child()
 
-    scroller_stack = Gtk.Template.Child()
+    scroller = Gtk.Template.Child()
+    results_list = Gtk.Template.Child()
 
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        self.application = kwargs.get('application', None)
+
+        self.is_playing = False
+        self.is_fullscreen = False
+        self.inhibit_cookie = 0
+        self.strong_instances = []
+        self.video_results_meta = []
+        instances = Instances(app_window = self)
+        instances.get_strong_instances()
+
+        menu = Menu(app_window = self)
+        self.menu_button.set_popover(menu)
+
+        provider = Gtk.CssProvider()
+        provider.load_from_resource('/sm/puri/Stream/ui/stream.css')
+        styleContext = Gtk.StyleContext()
+        styleContext.add_provider_for_screen(
+            Gdk.Screen.get_default(), provider,
+            Gtk.STYLE_PROVIDER_PRIORITY_APPLICATION)
 
     @Gtk.Template.Callback()
     def search_toggle(self, toggle_button):
         # toggle the True/False from what is current
         self.search_bar.set_visible(self.search_bar_toggle.get_active())
 
-    def clear_scroll_stacks(self):
-        children = self.scroller_stack.get_children()
+    def clear_results(self):
+        self.video_results_meta = []
+        children = self.results_list.get_children()
         for child in children:
             child.destroy()
 
     @Gtk.Template.Callback()
     def search_entry(self, search_box):
-        self.stacks_list = []
         self.status_page.set_visible(False)
 
         self.hide_error_box()
@@ -76,74 +93,35 @@ class StreamWindow(Handy.ApplicationWindow):
 
         search_query = search_box.get_text()
 
-        self.clear_scroll_stacks()
+        self.clear_results()
 
         if not self.strong_instances:
             self.show_error_box("Service Failure",
                 "No strong video server instances found yet. Try again shortly.")
         else:
-            instance_index = 0
-            for sort_by in ["relevance", "view_count"]:
-                key = sort_by + str(instance_index)
-                self.stacks_list.append(key)
-                self.scroller = ScrollerBox(self, instance_index)
-                self.scroller_stack.add_named(self.scroller, key)
+            search = DefaultSearch(app_window = self,
+                                   spinner = self.spinner,
+                                   add_result_meta = self.add_result_meta)
+            search.do_search(query = search_query)
 
-                search = DefaultSearch(app_window = self,
-                                       instance_index = instance_index,
-                                       sort_by = sort_by,
-                                       set_headerbar_color = self.set_headerbar_color,
-                                       spinner = self.spinner,
-                                       add_result = self.scroller.add_result,
-                                       scroller_stack = self.scroller_stack)
-                search.do_search(query = search_query)
-                instance_index += 1
+    def add_result_meta(self, video_meta):
+        self.video_results_meta.append(video_meta)
+        index_meta = len(self.video_results_meta) - 1
+        self.add_result(index_meta)
 
-            key = 'plugin' + str(instance_index)
-            self.stacks_list.append(key)
-            self.scroller = ScrollerBox(self, instance_index)
-            self.scroller_stack.add_named(self.scroller, key)
+    def add_result(self, index):
+        results_box = ResultsBox(self)
+        self.results_list.add(results_box)
 
-            plugin = PluginSearch(set_headerbar_color = self.set_headerbar_color,
-                                  add_result = self.scroller.add_result,
-                                  hide_scroller_error_box = self.scroller.hide_scroller_error_box,
-                                  show_scroller_error_box = self.scroller.show_scroller_error_box)
-            plugin.do_search(query = search_query)
-
-    def set_headerbar_color(self):
-        self.get_visible_scroller()
-        self.navigation_previous.set_sensitive(True)
-        self.navigation_next.set_sensitive(True)
-        nav_current_context = self.navigation_current.get_style_context()
-        css_classes = nav_current_context.list_classes()
-        for css_class in css_classes:
-            if css_class.startswith('color'):
-                nav_current_context.remove_class(css_class)
-
-        if self.scroller_index < 8:
-            nav_current_context.add_class("color" + str(self.scroller_index))
-
-    def get_visible_scroller(self):
-        visible_scroller = self.scroller_stack.get_visible_child_name()
-        self.scroller_index = self.stacks_list.index(visible_scroller)
+        video_meta = self.video_results_meta[index]
+        results_box.setup_stream(video_meta)
 
     @Gtk.Template.Callback()
-    def show_previous_results(self, button):
-        self.get_visible_scroller()
-        if self.scroller_index > 0:
-            previous_name = self.stacks_list[self.scroller_index-1]
-            previous_scroller = self.scroller_stack.get_child_by_name(str(previous_name))
-            self.scroller_stack.set_visible_child(previous_scroller)
-            self.set_headerbar_color()
-
-    @Gtk.Template.Callback()
-    def show_next_results(self, button):
-        self.get_visible_scroller()
-        if self.scroller_index < len(self.scroller_stack) - 1:
-            next_name = self.stacks_list[self.scroller_index+1]
-            next_scroller = self.scroller_stack.get_child_by_name(str(next_name))
-            self.scroller_stack.set_visible_child(next_scroller)
-            self.set_headerbar_color()
+    def load_more(self, event, data):
+        vadj = self.scroller.get_vadjustment()
+        position = vadj.get_value()
+        upper = vadj.get_upper()
+        page_size = vadj.get_page_size()
 
     def fullscreen_toggle(self, focus_child):
         if self.is_fullscreen:
@@ -164,27 +142,21 @@ class StreamWindow(Handy.ApplicationWindow):
     @Gtk.Template.Callback()
     def keypress_listener(self, widget, ev):
         key = Gdk.keyval_name(ev.keyval)
-        if self.scroller_stack:
-            visible_scroller = self.scroller_stack.get_visible_child()
-            if visible_scroller:
-                focus_child = visible_scroller.results_list.get_focus_child()
-                if focus_child:
-                    if key == "Escape":
-                        focus_child.get_child().unfullscreen_button(None)
-                    if key == "space":
-                        self.play_pause_toggle(focus_child)
-                    if key == "f":
-                        self.fullscreen_toggle(focus_child)
+        focus_child = self.results_list.get_focus_child()
+        if focus_child:
+            if key == "Escape":
+                focus_child.get_child().unfullscreen_button(None)
+            if key == "space":
+                self.play_pause_toggle(focus_child)
+            if key == "f":
+                self.fullscreen_toggle(focus_child)
 
     def pause_all(self, active_window):
-        if self.scroller_stack:
-            scrollers = self.scroller_stack.get_children()
-            for scroller in scrollers:
-                flowboxes = scroller.results_list.get_children()
-                for flowbox in flowboxes:
-                    result_window = flowbox.get_child()
-                    if result_window != active_window:
-                        flowbox.get_child().null_out_player()
+        flowboxes = self.results_list.get_children()
+        for flowbox in flowboxes:
+            result_window = flowbox.get_child()
+            if result_window != active_window:
+                flowbox.get_child().null_out_player()
 
     def inhibit_app(self):
         self.inhibit_cookie = self.application.inhibit(self,
@@ -207,23 +179,7 @@ class StreamWindow(Handy.ApplicationWindow):
         self.error_heading.set_label(heading)
         self.error_text.set_label(text)
 
-    def __init__(self, **kwargs):
-        super().__init__(**kwargs)
-        self.application = kwargs.get('application', None)
-
-        self.is_playing = False
-        self.is_fullscreen = False
-        self.inhibit_cookie = 0
-        self.strong_instances = []
-        instances = Instances(app_window = self)
-        instances.get_strong_instances()
-
-        menu = Menu(app_window = self)
-        self.menu_button.set_popover(menu)
-
-        provider = Gtk.CssProvider()
-        provider.load_from_resource('/sm/puri/Stream/ui/stream.css')
-        styleContext = Gtk.StyleContext()
-        styleContext.add_provider_for_screen(
-            Gdk.Screen.get_default(), provider,
-            Gtk.STYLE_PROVIDER_PRIORITY_APPLICATION)
+    @Gtk.Template.Callback()
+    def swallow_fullscreen_scroll_event(self, event, data):
+        if self.is_fullscreen:
+            return True

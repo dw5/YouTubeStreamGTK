@@ -20,17 +20,10 @@ gi.require_version('Gtk', '3.0')
 gi.require_version('Gdk', '3.0')
 gi.require_version('Gio', '2.0')
 gi.require_version('Gst', '1.0')
-gi.require_version('Handy', '1')
-gi.require_version('Soup', '2.4')
-from gi.repository import Gdk, GdkPixbuf, Gio, GLib, Gst, Gtk, Handy, Soup
-
-import json
+from gi.repository import Gdk, GdkPixbuf, Gio, GLib, Gst, Gtk
 
 Gst.init(None)
 Gst.init_check(None)
-Handy.init()
-
-import time
 
 @Gtk.Template(resource_path='/sm/puri/Stream/ui/results.ui')
 class ResultsBox(Gtk.Box):
@@ -61,13 +54,10 @@ class ResultsBox(Gtk.Box):
 
     window_to_player_box_padding = 28
 
-    def __init__(self, app_window, priority_index, **kwargs):
+    def __init__(self, app_window, **kwargs):
         super().__init__(**kwargs)
 
         self.app_window = app_window
-        self.priority = 0
-        if priority_index > 0:
-            self.priority = GLib.PRIORITY_LOW
 
         # listen for motion on the player box for controls show/hide
         self.event_box.add_events(Gdk.EventMask.POINTER_MOTION_MASK)
@@ -122,66 +112,10 @@ class ResultsBox(Gtk.Box):
         self.poster_image.set_from_pixbuf(pixbuf)
 
     def stream_at_scale_async(self, poster_file):
-        stream = poster_file.read_async(self.priority, None,
+        stream = poster_file.read_async(0, None,
                 self.on_file_read, None)
 
-    def check_video_playable(self, video_url):
-        session = Soup.Session.new()
-        session.set_property("timeout", 2)
-        message = Soup.Message.new("HEAD", video_url)
-        session.queue_message(message, self.check_video_playable_cb, None)
-
-    def check_video_playable_cb(self, session, results, user_data):
-        if results.status_code != 200:
-            self.set_visible(False)
-
-    def parse_video_results(self, session, result, message):
-        if message.status_code != 200:
-            # remove unplayable video urls from list
-            self.set_visible(False)
-            return False
-
-        try:
-            self.json = json.loads(message.response_body.data)
-        except:
-            self.set_visible(False)
-            return False
-
-        self.video_uri = None
-        for format_stream in self.json['formatStreams']:
-
-            if format_stream['qualityLabel'] == "360p":
-                self.video_uri = format_stream['url']
-
-            # if (future) user-config desires 720p,
-            # check if it is available and if so use it instead
-            #if format_stream['qualityLabel'] == "720p":
-            #    self.video_uri = format_stream['url']
-
-        if not self.video_uri:
-            self.set_visible(False)
-            return False
-
-        self.check_video_playable(self.video_uri)
-
-        self.get_download_uris()
-
-        self.player.set_property("uri", self.video_uri)
-        self.player.set_property("video-sink", self.sink)
-
-        poster_file = Gio.File.new_for_uri(self.poster_uri)
-
-        self.stream_at_scale_async(poster_file)
-
-    def get_video_details(self):
-        uri = f"{self.instance}/api/v1/videos/{self.video_id}?fields=adaptiveFormats,formatStreams"
-        self.session = Soup.Session.new()
-        self.session.set_property("timeout", 5)
-        message = Soup.Message.new("GET", uri)
-        self.session.queue_message(message, self.parse_video_results, message)
-
     def setup_stream(self, video_meta):
-        self.instance = video_meta['strong_instance']
         self.video_id = video_meta['videoId']
         self.video_title = video_meta['title']
         self.video_channel = video_meta['author']
@@ -192,7 +126,26 @@ class ResultsBox(Gtk.Box):
         self.channel.set_label(self.video_channel)
         self.duration.set_label(video_duration)
 
-        self.get_video_details()
+        self.player.set_property("uri", video_meta['video_uri'])
+        self.player.set_property("video-sink", self.sink)
+
+        poster_file = Gio.File.new_for_uri(video_meta['poster_uri'])
+
+        self.stream_at_scale_async(poster_file)
+
+        if 'audio_dl_uri' in video_meta:
+            if video_meta['audio_dl_uri']:
+                # enable download button
+                self.audio_dl.set_sensitive(True)
+                # set the download uri for download button
+                self.audio_dl_uri = video_meta['audio_dl_uri']
+
+        if 'video_dl_uri' in video_meta:
+            if video_meta['video_dl_uri']:
+                # enable download button
+                self.video_dl.set_sensitive(True)
+                # set the download uri for download button
+                self.video_dl_uri = video_meta['video_dl_uri']
 
     def update_slider(self):
         if not self.app_window.is_playing:
@@ -403,7 +356,7 @@ class ResultsBox(Gtk.Box):
         GLib.timeout_add(50, self.delay_grab)
 
         # horizonal scrollbar, vertical scrollbar (do last)
-        scroller = self.app_window.scroller_stack.get_visible_child()
+        scroller = self.app_window.scroller
         scroller.set_policy(Gtk.PolicyType.NEVER, Gtk.PolicyType.EXTERNAL)
         scroller.set_kinetic_scrolling(False)
 
@@ -428,7 +381,7 @@ class ResultsBox(Gtk.Box):
         self.resize_player(set_width, set_height)
         self.app_window.resize(self.app_orig_width, self.app_orig_height)
 
-        scroller = self.app_window.scroller_stack.get_visible_child()
+        scroller = self.app_window.scroller
         scroller.set_policy(Gtk.PolicyType.NEVER, Gtk.PolicyType.AUTOMATIC)
         scroller.set_kinetic_scrolling(True)
 
@@ -465,50 +418,3 @@ class ResultsBox(Gtk.Box):
     @Gtk.Template.Callback()
     def swallow_slider_scroll_event(self, event, data):
         return True
-
-    def get_download_uris(self):
-        # get download link urls based on (future) user-config
-        # video quality: ["480p", "720p", "1080p"] # default 720p
-        # audio structure:
-        #     "bitrate": "142028",
-        #     "type": "audio/webm; codecs=\"opus\"",
-        #     "container": "webm",
-        # video structure:
-        #     "bitrate": "440700",
-        #     "type": "video/mp4; codecs=\"avc1.4d401f\"",
-        #     "container": "mp4",
-        #     "qualityLabel": "720p"
-
-        last_bitrate = None
-        self.audio_dl_uri = None
-        for af in self.json['adaptiveFormats']:
-            if af['type'].startswith('audio/mp4'):
-                if not self.audio_dl_uri:
-                    last_bitrate = af['bitrate']
-                    self.audio_dl_uri = af['url']
-
-                if af['bitrate'] > last_bitrate:
-                    last_bitrate = af['bitrate']
-                    self.audio_dl_uri = af['url']
-
-        video_quality = "720p"
-        self.video_dl_uri = None
-        for fs in self.json['formatStreams']:
-            if fs['type'].startswith('video/mp4'):
-                # set it to something
-                if not self.video_dl_uri:
-                    self.video_dl_uri = fs['url']
-
-                if 'qualityLabel' in fs:
-                    if fs['qualityLabel'] == "720p" and video_quality == "720p":
-                        self.video_dl_uri = fs['url']
-                    elif fs['qualityLabel'] == "480p" and video_quality == "480p":
-                        self.video_dl_uri = fs['url']
-                    elif fs['qualityLabel'] == "1080p" and video_quality == "1080p":
-                        self.video_dl_uri = fs['url']
-
-        if self.audio_dl_uri:
-            self.audio_dl.set_sensitive(True)
-
-        if self.video_dl_uri:
-            self.video_dl.set_sensitive(True)
