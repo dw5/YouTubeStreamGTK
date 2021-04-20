@@ -8,9 +8,8 @@ install_data(
 
 icondir = join_paths('icons', 'hicolor', 'symbolic', 'apps')
 install_data(
-  join_paths(icondir, 'sm.puri.Stream-symbolic.png'),
+  join_paths(icondir, ('@0@-symbolic.png').format(application_id)),
   install_dir: join_paths(get_option('datadir'), icondir),
-  rename: '@0@-symbolic.svg'.format(application_id)
 )
 
 desktop_file = i18n.merge_file(
