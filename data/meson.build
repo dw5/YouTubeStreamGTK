@@ -8,7 +8,7 @@ install_data(
 
 icondir = join_paths('icons', 'hicolor', 'symbolic', 'apps')
 install_data(
-  join_paths(icondir, 'sm.puri.Stream-symbolic.svg'),
+  join_paths(icondir, 'sm.puri.Stream-symbolic.png'),
   install_dir: join_paths(get_option('datadir'), icondir),
   rename: '@0@-symbolic.svg'.format(application_id)
 )
