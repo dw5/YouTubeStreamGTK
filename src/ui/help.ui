@@ -9,12 +9,32 @@
         <child>
           <object class="GtkShortcutsGroup">
             <property name="visible">True</property>
+            <property name="title" translatable="yes" context="shortcut window">Application</property>
+            <child>
+              <object class="GtkShortcutsShortcut">
+                <property name="visible">True</property>
+                <property name="title" translatable="yes" context="shortcut window">Volume Up</property>
+                <property name="accelerator">Up</property>
+              </object>
+            </child>
+            <child>
+              <object class="GtkShortcutsShortcut">
+                <property name="visible">True</property>
+                <property name="title" translatable="yes" context="shortcut window">Volume Down</property>
+                <property name="accelerator">Down</property>
+              </object>
+            </child>
+          </object>
+        </child>
+        <child>
+          <object class="GtkShortcutsGroup">
+            <property name="visible">True</property>
             <property name="title" translatable="yes" context="shortcut window">Player</property>
             <child>
               <object class="GtkShortcutsShortcut">
                 <property name="visible">True</property>
-		<property name="title" translatable="yes" context="shortcut window">Play/Pause Toggle</property>
-		<property name="accelerator">space</property>
+                <property name="title" translatable="yes" context="shortcut window">Play/Pause Toggle</property>
+                <property name="accelerator">space</property>
               </object>
             </child>
             <child>
@@ -28,7 +48,21 @@
               <object class="GtkShortcutsShortcut">
                 <property name="visible">True</property>
                 <property name="title" translatable="yes" context="shortcut window">Unfullscreen</property>
-		<property name="accelerator">Escape</property>
+                <property name="accelerator">Escape</property>
+              </object>
+            </child>
+            <child>
+              <object class="GtkShortcutsShortcut">
+                <property name="visible">True</property>
+                <property name="title" translatable="yes" context="shortcut window">Seek Forward</property>
+                <property name="accelerator">Right</property>
+              </object>
+            </child>
+            <child>
+              <object class="GtkShortcutsShortcut">
+                <property name="visible">True</property>
+                <property name="title" translatable="yes" context="shortcut window">Seek Backward</property>
+                <property name="accelerator">Left</property>
               </object>
             </child>
           </object>
