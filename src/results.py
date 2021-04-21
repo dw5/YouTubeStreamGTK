@@ -125,6 +125,8 @@ class ResultsBox(Gtk.Box):
         self.title.set_label(self.video_title)
         self.channel.set_label(self.video_channel)
         self.duration.set_label(video_duration)
+        self.time_viewed.set_label('0:00')
+        self.time_remaining.set_label(f"-{video_duration}")
 
         self.player.set_property("uri", video_meta['video_uri'])
         self.player.set_property("video-sink", self.sink)
