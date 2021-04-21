@@ -357,7 +357,7 @@ class ResultsBox(Gtk.Box):
         results_context.remove_class("results")
         results_context.add_class("fullscreen")
 
-        self.box_grab_focus()
+        GLib.timeout_add(50, self.box_grab_focus)
 
         # horizonal scrollbar, vertical scrollbar (do last)
         scroller = self.app_window.scroller
@@ -389,7 +389,7 @@ class ResultsBox(Gtk.Box):
         scroller.set_policy(Gtk.PolicyType.NEVER, Gtk.PolicyType.AUTOMATIC)
         scroller.set_kinetic_scrolling(True)
 
-        self.box_grab_focus()
+        GLib.timeout_add(50, self.box_grab_focus)
 
     @Gtk.Template.Callback()
     def seek_slider(self, scale):
@@ -435,6 +435,8 @@ class ResultsBox(Gtk.Box):
     def event_box_mouse_click(self, event, data):
         if self.app_window.is_playing:
             self.pause_button(None)
+        else:
+            self.play_button(None)
         self.event_box_mouse_action(event, data)
 
     @Gtk.Template.Callback()
