@@ -64,8 +64,8 @@ class StreamWindow(Handy.ApplicationWindow):
         instances = Instances(app_window = self)
         instances.get_strong_instances()
 
-        menu = Menu(app_window = self)
-        self.menu_button.set_popover(menu)
+        self.menu = Menu(app_window = self)
+        self.menu_button.set_popover(self.menu)
 
         provider = Gtk.CssProvider()
         provider.load_from_resource('/sm/puri/Stream/ui/stream.css')
@@ -162,6 +162,15 @@ class StreamWindow(Handy.ApplicationWindow):
 #    @Gtk.Template.Callback()
 #    def open_primary_menu(self, widget, ev):
 #        print("in open primary menu")
+
+    def autoplay_next(self):
+        if self.menu.autoplay_toggle.get_active():
+            focus_child = self.results_list.get_focus_child()
+            if focus_child:
+                focus_index = focus_child.get_index()
+                focus_next = self.results_list.get_child_at_index(focus_index + 1)
+                if focus_next:
+                    self.play_pause_toggle(focus_next)
 
     @Gtk.Template.Callback()
     def keypress_listener(self, widget, ev):

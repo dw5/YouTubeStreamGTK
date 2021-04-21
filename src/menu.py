@@ -26,6 +26,8 @@ from .help import Help
 class Menu(Gtk.PopoverMenu):
     __gtype_name__ = 'Menu'
 
+    autoplay_toggle = Gtk.Template.Child()
+
     def __init__(self, app_window, **kwargs):
         super().__init__(**kwargs)
 
@@ -42,4 +44,3 @@ class Menu(Gtk.PopoverMenu):
         help = Help()
         help.props.transient_for = self.app_window
         help.present()
-
