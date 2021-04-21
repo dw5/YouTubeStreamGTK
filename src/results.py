@@ -115,13 +115,13 @@ class ResultsBox(Gtk.Box):
         self.video_title = video_meta['title']
         self.video_channel = video_meta['author']
         self.poster_uri = video_meta['poster_uri']
-        video_duration = self.get_readable_seconds(video_meta['lengthSeconds'])
+        self.video_duration = self.get_readable_seconds(video_meta['lengthSeconds'])
 
         self.title.set_label(self.video_title)
         self.channel.set_label(self.video_channel)
-        self.duration.set_label(video_duration)
+        self.duration.set_label(self.video_duration)
         self.time_viewed.set_label('0:00')
-        self.time_remaining.set_label(f"-{video_duration}")
+        self.time_remaining.set_label(f"-{self.video_duration}")
 
         self.player.set_property("uri", video_meta['video_uri'])
         self.player.set_property("video-sink", self.sink)
@@ -167,8 +167,8 @@ class ResultsBox(Gtk.Box):
                 self.time_viewed.set_label(viewed)
                 self.time_remaining.set_label(f"-{remaining}")
 
-                if position / Gst.SECOND >= duration / Gst.SECOND:
-                    self.null_out_player()
+                if int(position / Gst.SECOND) >= int(duration / Gst.SECOND):
+                    GLib.timeout_add(500, self.null_out_player)
 
                 try:
                     # block seek slider function so it doesn't loop itself
@@ -314,6 +314,11 @@ class ResultsBox(Gtk.Box):
     def null_out_player(self):
         self.inactivate_player()
         self.player.set_state(Gst.State.NULL)
+        self.slider.set_value(0)
+        self.time_viewed.set_label('0:00')
+        self.time_remaining.set_label(f"-{self.video_duration}")
+        self.video_widget.hide()
+        self.poster_image.show()
 
     @Gtk.Template.Callback()
     def pause_button(self, button):
