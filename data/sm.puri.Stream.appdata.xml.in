@@ -3,6 +3,24 @@
 	<id>sm.puri.Stream.desktop</id>
 	<metadata_license>CC0-1.0</metadata_license>
 	<project_license>GPL-3.0-or-later</project_license>
+	<name>Stream</name>
+	<url type="homepage">https://source.puri.sm/todd/Stream</url>
+	<url type="bugtracker">https://source.puri.sm/todd/Stream/-/issues</url>
+	<url type="donation">https://puri.sm/fund-your-app/</url>
+	<content_rating type="oars-1.1" />
+	<summary>A Web Video Player</summary>
 	<description>
+		<p>A Web Video Player</p>
 	</description>
+	<screenshots>
+		<screenshot type="default">
+		</screenshot>
+	</screenshots>
+	<releases>
+		<release version="0.1.0" date="2021-04-21">
+			<description>
+				<p>Initial release.</p>
+			</description>
+		</release>
+	</releases>
 </component>
