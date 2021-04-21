@@ -97,6 +97,11 @@ class StreamWindow(Handy.ApplicationWindow):
         self.clear_results()
         self.page_results = 1
 
+        # determine app window size at time of search
+        size = self.get_size()
+        self.app_orig_width = size.width
+        self.app_orig_height = size.height
+
         if not self.strong_instances:
             self.show_error_box("Service Failure",
                 "No strong video server instances found yet. Try again shortly.")

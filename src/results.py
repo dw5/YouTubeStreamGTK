@@ -62,13 +62,8 @@ class ResultsBox(Gtk.Box):
         # listen for motion on the player box for controls show/hide
         self.event_box.add_events(Gdk.EventMask.POINTER_MOTION_MASK)
 
-        # determine window width at time of search
         # do ratio calculation from width (16:9 or 1.77)
-        # retain aspect ratio
-        size = self.app_window.get_size()
-        self.app_orig_width = size.width
-        self.app_orig_height = size.height
-        self.video_box_width = int(size.width - self.window_to_player_box_padding)
+        self.video_box_width = int(self.app_window.app_orig_width - self.window_to_player_box_padding)
         self.video_box_height = int(self.video_box_width / 1.77)
 
         self.player_box.set_size_request(self.video_box_width, self.video_box_height)
@@ -381,11 +376,11 @@ class ResultsBox(Gtk.Box):
         results_context.remove_class("fullscreen")
         results_context.add_class("results")
 
-        set_width = int(self.app_orig_width - self.window_to_player_box_padding)
+        set_width = int(self.app_window.app_orig_width - self.window_to_player_box_padding)
         set_height = int(set_width / 1.77)
 
         self.resize_player(set_width, set_height)
-        self.app_window.resize(self.app_orig_width, self.app_orig_height)
+        self.app_window.resize(self.app_window.app_orig_width, self.app_window.app_orig_height)
 
         scroller = self.app_window.scroller
         scroller.set_policy(Gtk.PolicyType.NEVER, Gtk.PolicyType.AUTOMATIC)
