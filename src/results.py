@@ -161,7 +161,7 @@ class ResultsBox(Gtk.Box):
 
             position_value = float(position) / Gst.SECOND * self.percent
 
-            if int(duration) > 0:
+            if duration > 0 and position > 0:
                 viewed_seconds = int(position / Gst.SECOND)
                 remaining_seconds = int((duration - position) / Gst.SECOND)
                 viewed = self.get_readable_seconds(viewed_seconds)
@@ -170,20 +170,16 @@ class ResultsBox(Gtk.Box):
                 self.time_viewed.set_label(viewed)
                 self.time_remaining.set_label(f"-{remaining}")
 
-                if int(position / Gst.SECOND) >= int(duration / Gst.SECOND):
+                if position / Gst.SECOND >= duration / Gst.SECOND:
                     self.null_out_player()
 
-            # is negative number when not successful, so put it to 0
-            if not success:
-                position_value = 0
-            
-            try:
-                # block seek slider function so it doesn't loop itself
-                self.slider.handler_block_by_func(self.seek_slider)
-                self.slider.set_value(position_value)
-                self.slider.handler_unblock_by_func(self.seek_slider)
-            except:
-                return False
+                try:
+                    # block seek slider function so it doesn't loop itself
+                    self.slider.handler_block_by_func(self.seek_slider)
+                    self.slider.set_value(position_value)
+                    self.slider.handler_unblock_by_func(self.seek_slider)
+                except:
+                    return False
 
         return True
 
@@ -283,8 +279,17 @@ class ResultsBox(Gtk.Box):
         self.show_progress_icon('video')
         self.download_video_uri(self.video_dl_uri)
 
+    def box_grab_focus(self):
+        if self.app_window.results_list.get_focus_child():
+            # grab the parent flowboxchild and focus it
+            # to snap it into frame
+            self.app_window.results_list.get_focus_child().grab_focus()
+        # grab the result box to enable future focus snapping
+        self.grab_focus()
+
     @Gtk.Template.Callback()
     def play_button(self, button):
+        self.box_grab_focus()
         # loop through all child results pausing them
         self.app_window.pause_all(self)
 
@@ -303,6 +308,9 @@ class ResultsBox(Gtk.Box):
         # allow seeking
         self.slider.set_sensitive(True)
 
+        app_volume = self.app_window.volume.get_value()
+        self.player.set_property("volume", app_volume)
+
         # update slider to track video time in slider
         GLib.timeout_add_seconds(1, self.update_slider)
 
@@ -312,6 +320,7 @@ class ResultsBox(Gtk.Box):
 
     @Gtk.Template.Callback()
     def pause_button(self, button):
+        self.box_grab_focus()
         self.inactivate_player()
         self.player.set_state(Gst.State.PAUSED)
 
@@ -328,9 +337,6 @@ class ResultsBox(Gtk.Box):
     def resize_player(self, width, height):
         self.poster_image.set_size_request(width, height)
         self.video_widget.set_size_request(width, height)
-
-    def delay_grab(self):
-        self.grab_focus()
 
     @Gtk.Template.Callback()
     def fullscreen_button(self, button):
@@ -351,9 +357,7 @@ class ResultsBox(Gtk.Box):
         results_context.remove_class("results")
         results_context.add_class("fullscreen")
 
-        # grabbing happens before resize completes
-        # adding a slight delay to grab focus after resize completes
-        GLib.timeout_add(50, self.delay_grab)
+        self.box_grab_focus()
 
         # horizonal scrollbar, vertical scrollbar (do last)
         scroller = self.app_window.scroller
@@ -385,7 +389,7 @@ class ResultsBox(Gtk.Box):
         scroller.set_policy(Gtk.PolicyType.NEVER, Gtk.PolicyType.AUTOMATIC)
         scroller.set_kinetic_scrolling(True)
 
-        self.grab_focus()
+        self.box_grab_focus()
 
     @Gtk.Template.Callback()
     def seek_slider(self, scale):
@@ -395,6 +399,31 @@ class ResultsBox(Gtk.Box):
         self.player.seek_simple(Gst.Format.TIME,
             Gst.SeekFlags.FLUSH | Gst.SeekFlags.KEY_UNIT,
             seek * Gst.SECOND / self.percent)
+
+    def reverse_keypress(self):
+        self.box_grab_focus()
+        if self.app_window.is_playing:
+            success, position = self.player.query_position(Gst.Format.TIME)
+            seek = 0
+            # extra fast keypresses yield a -1 for position
+            if position > 0:
+                if position / Gst.SECOND >= 10:
+                    seek = position - (10 * Gst.SECOND)
+                self.player.seek_simple(Gst.Format.TIME,
+                    Gst.SeekFlags.FLUSH | Gst.SeekFlags.KEY_UNIT, seek)
+
+    def forward_keypress(self):
+        self.box_grab_focus()
+        if self.app_window.is_playing:
+            p_success, position = self.player.query_position(Gst.Format.TIME)
+            d_success, duration = self.player.query_duration(Gst.Format.TIME)
+            seek = duration
+            # extra fast keypresses yield a -1 for position
+            if position > 0:
+                if position <= duration - (10 * Gst.SECOND):
+                    seek = position + (10 * Gst.SECOND)
+                self.player.seek_simple(Gst.Format.TIME,
+                    Gst.SeekFlags.FLUSH | Gst.SeekFlags.KEY_UNIT, seek)
 
     def poll_mouse(self):
         now_is = int(GLib.get_current_time())

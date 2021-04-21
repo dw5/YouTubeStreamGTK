@@ -115,13 +115,17 @@ class Search:
 
     def check_video_playable_cb(self, session, results, video_meta):
         if results.status_code != 200:
+            #print('Unplayable video file, trying next instance')
+            #print(video_meta['title'])
             video_meta.pop('video_uri')
             self.si_index += 1
 
             if len(self.app_window.strong_instances) > self.si_index:
                 self.this_instance = self.app_window.strong_instances[self.si_index]
+                #print(self.this_instance)
                 self.get_video_details(video_meta)
             else:
+                #print("Out of instances, breaking")
                 return False
 
         if 'video_uri' in video_meta:

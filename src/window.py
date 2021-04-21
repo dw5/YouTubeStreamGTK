@@ -35,6 +35,7 @@ class StreamWindow(Handy.ApplicationWindow):
     __gtype_name__ = 'StreamWindow'
 
     header_bar = Gtk.Template.Child()
+    volume = Gtk.Template.Child()
     status_icon = Gtk.Template.Child()
 
     search_bar_toggle = Gtk.Template.Child()
@@ -141,15 +142,28 @@ class StreamWindow(Handy.ApplicationWindow):
 
     @Gtk.Template.Callback()
     def keypress_listener(self, widget, ev):
-        key = Gdk.keyval_name(ev.keyval)
         focus_child = self.results_list.get_focus_child()
         if focus_child:
+            # key values are from gdk/gdkkeysyms.h
+            key = Gdk.keyval_name(ev.keyval)
             if key == "Escape":
                 focus_child.get_child().unfullscreen_button(None)
-            if key == "space":
+            elif key == "space":
                 self.play_pause_toggle(focus_child)
-            if key == "f":
+            elif key == "f":
                 self.fullscreen_toggle(focus_child)
+            elif key == "Up":
+                self.volume_up_keypress()
+                return True
+            elif key == "Down":
+                self.volume_down_keypress()
+                return True
+            elif key == "Left":
+                focus_child.get_child().reverse_keypress()
+                return True
+            elif key == "Right":
+                focus_child.get_child().forward_keypress()
+                return True
 
     def pause_all(self, active_window):
         flowboxes = self.results_list.get_children()
@@ -183,3 +197,34 @@ class StreamWindow(Handy.ApplicationWindow):
     def swallow_fullscreen_scroll_event(self, event, data):
         if self.is_fullscreen:
             return True
+
+    @Gtk.Template.Callback()
+    def volume_change(self, event, data):
+        self.volume_slider(event.get_value())
+
+    def volume_slider(self, volume_value):
+        children = self.results_list.get_children()
+        for child in children:
+            child.get_child().player.set_property("volume", volume_value)
+
+    def focus_child(self):
+        # grab focus of playing video on keypress
+        focus_child = self.results_list.get_focus_child()
+        if focus_child:
+            focus_child.get_child().box_grab_focus()
+
+    def volume_up_keypress(self):
+        current_volume = self.volume.get_value()
+        louder = 1.0
+        if current_volume <= 0.9:
+            louder = current_volume + 0.1
+        self.volume.set_value(louder)
+        self.focus_child()
+
+    def volume_down_keypress(self):
+        current_volume = self.volume.get_value()
+        quieter = 0
+        if current_volume >= 0.1:
+            quieter = current_volume - 0.1
+        self.volume.set_value(quieter)
+        self.focus_child()
