@@ -60,16 +60,18 @@ class Instances:
             # remove non http gettable urls
             if (not instance_uri.endswith('.onion') and
                     not instance_uri.endswith('.i2p')):
-                self.check_query_api_valid(instance[1]['uri'])
+                self.check_query_api_valid(instance_uri)
 
         # add a backup
         self.check_query_api_valid('https://iteroni.com')
+        self.check_query_api_valid('https://tube.connect.cafe')
 
     # check the instance can run a query on the API
     def check_query_api_valid(self, uri):
         # /api/v1/search?q=query
         # /api/v1/search?q=Librem%205;fields=type
         search_uri = f"{uri}/api/v1/search?q=Librem%205;fields=type"
+        #print(search_uri)
         session = Soup.Session.new()
         session.set_property("timeout", 2)
         message = Soup.Message.new("GET", search_uri)
