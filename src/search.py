@@ -27,41 +27,47 @@ class Search:
         # for internal plugins only
         self.app_window = kwargs.get('app_window', None)
         self.spinner = kwargs.get('spinner', None)
+        self.scroller = kwargs.get('scroller', None)
 
         self.si_index = 0
         self.this_instance = self.app_window.strong_instances[self.si_index]
 
+        self.search_video_ids = []
+
         # limited access
         self.add_result_meta = kwargs.get('add_result_meta', None)
 
-    def do_search(self, query):
-        esc_query = GLib.uri_escape_string(query, None, None)
-        uri = f"{self.this_instance}/api/v1/search?q={esc_query};fields=title,videoId,author,lengthSeconds,videoThumbnails"
+    def do_search(self, query, page):
+        self.spinner.set_visible(True)
+        self.query = query
+        esc_query = GLib.uri_escape_string(self.query, None, None)
+        uri = f"{self.this_instance}/api/v1/search?q={esc_query};page={page};fields=title,videoId,author,lengthSeconds,videoThumbnails"
+        #print(uri)
 
         self.session = Soup.Session.new()
         self.session.set_property("timeout", 5)
         message = Soup.Message.new("GET", uri)
-        self.session.queue_message(message, self.show_results, message)
+        self.session.queue_message(message, self.show_results, page)
 
-    def show_results(self, session, result, message):
-        self.spinner.set_visible(False)
-
-        if message.status_code != 200:
-            self.app_window.show_error_box("Service Failure",
-                "There is no response from the streaming servers.")
+    def show_results(self, session, results, page):
+        if results.status_code != 200:
+            if page == 1:
+                self.app_window.show_error_box("Service Failure",
+                    "There is no response from the streaming servers.")
             return False
 
         try:
-            self.search_json = json.loads(message.response_body.data)
+            self.search_json = json.loads(results.response_body.data)
         except:
-            self.app_window.show_error_box("Service Failure",
-                "The streaming server response failed to parse results.")
+            if page == 1:
+                self.app_window.show_error_box("Service Failure",
+                    "The streaming server response failed to parse results.")
             return False
 
         for video_meta in self.search_json:
-            self.get_poster_url(video_meta)
-            # loop to find a playable video instance
-            self.get_video_details(video_meta)
+            if video_meta['videoId'] not in self.search_video_ids:
+                self.get_poster_url(video_meta)
+                self.get_video_details(video_meta)
 
     def get_poster_url(self, video_meta):
         for poster in video_meta['videoThumbnails']:
@@ -119,7 +125,6 @@ class Search:
             #print(video_meta['title'])
             video_meta.pop('video_uri')
             self.si_index += 1
-
             if len(self.app_window.strong_instances) > self.si_index:
                 self.this_instance = self.app_window.strong_instances[self.si_index]
                 #print(self.this_instance)
@@ -129,7 +134,15 @@ class Search:
                 return False
 
         if 'video_uri' in video_meta:
+            # add the result to the video meta
+            # which will trigger the video to display to the user
             self.add_result_meta(video_meta)
+
+            # appending known playable videos to filter duplicates
+            self.search_video_ids.append(video_meta['videoId'])
+
+            self.spinner.set_visible(False)
+            self.scroller.set_visible(True)
 
     def get_download_uris(self, video_meta):
         # get download link urls based on (future) user-config

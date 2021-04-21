@@ -90,20 +90,22 @@ class StreamWindow(Handy.ApplicationWindow):
         self.status_page.set_visible(False)
 
         self.hide_error_box()
-        self.spinner.set_visible(True)
+        self.scroller.set_visible(False)
 
-        search_query = search_box.get_text()
+        self.search_query = search_box.get_text()
 
         self.clear_results()
+        self.page_results = 1
 
         if not self.strong_instances:
             self.show_error_box("Service Failure",
                 "No strong video server instances found yet. Try again shortly.")
         else:
-            search = DefaultSearch(app_window = self,
+            self.search = DefaultSearch(app_window = self,
                                    spinner = self.spinner,
+                                   scroller = self.scroller,
                                    add_result_meta = self.add_result_meta)
-            search.do_search(query = search_query)
+            self.search.do_search(query = self.search_query, page = self.page_results)
 
     def add_result_meta(self, video_meta):
         self.video_results_meta.append(video_meta)
@@ -123,6 +125,11 @@ class StreamWindow(Handy.ApplicationWindow):
         position = vadj.get_value()
         upper = vadj.get_upper()
         page_size = vadj.get_page_size()
+
+        self.page_upper = upper
+        if position + page_size >= upper:
+            self.page_results += 1
+            self.search.do_search(query = self.search_query, page = self.page_results)
 
     def fullscreen_toggle(self, focus_child):
         if self.is_fullscreen:
