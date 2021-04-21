@@ -26,7 +26,7 @@ class Search:
     def __init__(self, **kwargs):
         # for internal plugins only
         self.app_window = kwargs.get('app_window', None)
-        self.spinner = kwargs.get('spinner', None)
+        self.toggle_status_spinner = kwargs.get('toggle_status_spinner', None)
         self.scroller = kwargs.get('scroller', None)
 
         self.si_index = 0
@@ -38,7 +38,7 @@ class Search:
         self.add_result_meta = kwargs.get('add_result_meta', None)
 
     def do_search(self, query, page):
-        self.spinner.set_visible(True)
+        self.toggle_status_spinner(True)
         self.query = query
         esc_query = GLib.uri_escape_string(self.query, None, None)
         uri = f"{self.this_instance}/api/v1/search?q={esc_query};page={page};fields=title,videoId,author,lengthSeconds,videoThumbnails"
@@ -141,7 +141,7 @@ class Search:
             # appending known playable videos to filter duplicates
             self.search_video_ids.append(video_meta['videoId'])
 
-            self.spinner.set_visible(False)
+            self.toggle_status_spinner(False)
             self.scroller.set_visible(True)
 
     def get_download_uris(self, video_meta):

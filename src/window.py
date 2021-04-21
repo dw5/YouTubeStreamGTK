@@ -44,7 +44,7 @@ class StreamWindow(Handy.ApplicationWindow):
     menu_button = Gtk.Template.Child()
 
     status_page = Gtk.Template.Child()
-    spinner = Gtk.Template.Child()
+    status_spinner = Gtk.Template.Child()
     error_box = Gtk.Template.Child()
     error_heading = Gtk.Template.Child()
     error_text = Gtk.Template.Child()
@@ -79,14 +79,22 @@ class StreamWindow(Handy.ApplicationWindow):
         # toggle the True/False from what is current
         self.search_bar.set_visible(self.search_bar_toggle.get_active())
 
-    def clear_results(self):
-        self.video_results_meta = []
-        children = self.results_list.get_children()
-        for child in children:
-            child.destroy()
+    @Gtk.Template.Callback()
+    def clear_results(self, start_pos, end_pos, data):
+        # only clear results on cleared search bar (or called directly)
+        if end_pos == 0:
+            self.video_results_meta = []
+            children = self.results_list.get_children()
+            for child in children:
+                child.destroy()
+
+            self.hide_error_box()
+            self.scroller.set_visible(False)
+            self.status_page.set_visible(True)
 
     @Gtk.Template.Callback()
     def search_entry(self, search_box):
+        self.clear_results(0, 0, None)
         self.status_page.set_visible(False)
 
         self.hide_error_box()
@@ -94,7 +102,6 @@ class StreamWindow(Handy.ApplicationWindow):
 
         self.search_query = search_box.get_text()
 
-        self.clear_results()
         self.page_results = 1
 
         # determine app window size at time of search
@@ -107,10 +114,14 @@ class StreamWindow(Handy.ApplicationWindow):
                 "No strong video server instances found yet. Try again shortly.")
         else:
             self.search = DefaultSearch(app_window = self,
-                                   spinner = self.spinner,
+                                   toggle_status_spinner = self.toggle_status_spinner,
                                    scroller = self.scroller,
                                    add_result_meta = self.add_result_meta)
             self.search.do_search(query = self.search_query, page = self.page_results)
+
+    def toggle_status_spinner(self, toggle):
+        self.status_spinner.set_visible(toggle)
+        self.status_icon.set_visible(not toggle)
 
     def add_result_meta(self, video_meta):
         self.video_results_meta.append(video_meta)
@@ -200,7 +211,7 @@ class StreamWindow(Handy.ApplicationWindow):
         self.error_text.set_label("...")
 
     def show_error_box(self, heading, text):
-        self.spinner.set_visible(False)
+        self.toggle_status_spinner(False)
         self.error_box.set_visible(True)
         self.error_heading.set_label(heading)
         self.error_text.set_label(text)

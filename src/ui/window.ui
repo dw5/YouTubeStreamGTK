@@ -51,10 +51,8 @@
             <child>
               <object class="GtkVolumeButton" id="volume">
                 <property name="visible">True</property>
-                <property name="can-focus">False</property>
-                <property name="focus-on-click">False</property>
-                <property name="receives-default">True</property>
-                <property name="relief">none</property>
+                <property name="can-focus">True</property>
+                <property name="tooltip-text" translatable="yes">Volume</property>
                 <property name="adjustment">volume_adjustment</property>
                 <property name="value">0.90</property>
                 <property name="icons">audio-volume-muted-symbolic
@@ -62,26 +60,41 @@ audio-volume-high-symbolic
 audio-volume-low-symbolic
 audio-volume-medium-symbolic</property>
                 <signal name="value-changed" handler="volume_change" swapped="no"/>
-              </object>
-            </child>
-            <child>
-              <object class="GtkImage" id="status_icon">
-                <property name="visible">True</property>
-                <property name="can-focus">False</property>
-                <property name="icon-name">content-loading-symbolic</property>
-                <property name="icon_size">1</property>
                 <style>
-                  <class name="status-icon"/>
+                  <class name="image-button"/>
                 </style>
               </object>
             </child>
             <child>
-              <object class="GtkSpinner" id="spinner">
-                <property name="visible">False</property>
-                <property name="can-focus">True</property>
-                <property name="halign">center</property>
-                <property name="valign">center</property>
-                <property name="active">True</property>
+              <object class="GtkStack" id="status_staack">
+                <property name="visible">True</property>
+                <property name="can-focus">False</property>
+                <child>
+                  <object class="GtkImage" id="status_icon">
+                    <property name="visible">True</property>
+                    <property name="can-focus">False</property>
+                    <property name="icon-name">content-loading-symbolic</property>
+                    <property name="icon_size">1</property>
+                    <style>
+                      <class name="status-icon"/>
+                    </style>
+                  </object>
+                  <packing>
+                    <property name="position">2</property>
+                  </packing>
+                </child>
+                <child>
+                  <object class="GtkSpinner" id="status_spinner">
+                    <property name="visible">False</property>
+                    <property name="can-focus">True</property>
+                    <property name="halign">center</property>
+                    <property name="valign">center</property>
+                    <property name="active">True</property>
+                  </object>
+                  <packing>
+                    <property name="position">1</property>
+                  </packing>
+	        </child>
               </object>
               <packing>
                 <property name="pack-type">end</property>
@@ -133,6 +146,7 @@ audio-volume-medium-symbolic</property>
                 <property name="primary-icon-activatable">False</property>
                 <property name="primary-icon-sensitive">False</property>
                 <signal name="activate" handler="search_entry" swapped="no"/>
+                <signal name="delete-text" handler="clear_results" swapped="no"/>
               </object>
             </child>
           </object>
