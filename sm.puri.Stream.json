@@ -3,7 +3,7 @@
     "runtime" : "org.gnome.Platform",
     "runtime-version" : "3.38",
     "sdk" : "org.gnome.Sdk",
-    "command" : "stream",
+    "command" : "purism-stream",
     "finish-args" : [
         "--share=network",
         "--share=ipc",
@@ -48,7 +48,7 @@
             ]
         },
         {
-            "name" : "stream",
+            "name" : "purism-stream",
             "builddir" : true,
             "buildsystem" : "meson",
             "sources" : [
