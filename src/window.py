@@ -317,16 +317,16 @@ class StreamWindow(Handy.ApplicationWindow):
 
     def volume_up_keypress(self):
         current_volume = self.menu.volume.get_value()
-        louder = 1.0
-        if current_volume <= 0.9:
-            louder = current_volume + 0.1
+        louder = 100
+        if current_volume <= 90:
+            louder = current_volume + 10
         self.menu.volume.set_value(louder)
         self.focus_child()
 
     def volume_down_keypress(self):
         current_volume = self.menu.volume.get_value()
         quieter = 0
-        if current_volume >= 0.1:
-            quieter = current_volume - 0.1
+        if current_volume >= 10:
+            quieter = current_volume - 10
         self.menu.volume.set_value(quieter)
         self.focus_child()

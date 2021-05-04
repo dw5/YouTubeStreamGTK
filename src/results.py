@@ -333,7 +333,7 @@ class ResultsBox(Gtk.Box):
         # allow seeking
         self.slider.set_sensitive(True)
 
-        app_volume = self.app_window.menu.volume.get_value()
+        app_volume = self.app_window.menu.volume.get_value() / 100
         self.player.set_property("volume", app_volume)
 
         # update slider to track video time in slider

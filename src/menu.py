@@ -28,6 +28,7 @@ class Menu(Gtk.PopoverMenu):
 
     autoplay_toggle = Gtk.Template.Child()
     volume = Gtk.Template.Child()
+    volume_icon = Gtk.Template.Child()
 
     def __init__(self, app_window, **kwargs):
         super().__init__(**kwargs)
@@ -35,14 +36,25 @@ class Menu(Gtk.PopoverMenu):
         self.app_window = app_window
 
     @Gtk.Template.Callback()
-    def volume_change(self, event, data):
-        self.volume_slider(event.get_value())
+    def volume_change(self, event):
+        self.volume_setting(event.get_value())
 
-    def volume_slider(self, volume_value):
+    @Gtk.Template.Callback()
+    def mute_toggle(self, toggle_button):
+        if toggle_button.get_active():
+            self.volume_icon.set_property('icon-name', 'audio-volume-muted-symbolic')
+            self.volume_setting(0)
+        else:
+            self.volume_icon.set_property('icon-name', 'audio-volume-medium-symbolic')
+            self.volume_setting(self.volume.get_value())
+
+    def volume_setting(self, volume_value):
+        # gstreamer uses decimal 0.0 to 1.0 for volume
+        volume_decimal = volume_value / 100
         list = self.app_window.get_scroller_list()
         children = list.get_children()
         for child in children:
-            child.get_child().player.set_property("volume", volume_value)
+            child.get_child().player.set_property("volume", volume_decimal)
 
     @Gtk.Template.Callback()
     def show_about(self, data):

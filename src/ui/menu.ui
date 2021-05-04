@@ -3,9 +3,10 @@
 <interface>
   <requires lib="gtk+" version="3.20"/>
   <object class="GtkAdjustment" id="volume_adjustment">
-    <property name="upper">1</property>
-    <property name="step-increment">.05</property>
-    <property name="page-increment">.1</property>
+    <property name="upper">100</property>
+    <property name="value">90</property>
+    <property name="step-increment">5</property>
+    <property name="page-increment">10</property>
   </object>
   <template class="Menu" parent="GtkPopoverMenu">
     <property name="can-focus">False</property>
@@ -24,37 +25,43 @@
             <property name="visible">True</property>
             <property name="can-focus">False</property>
             <child>
-              <object class="GtkLabel">
+              <object class="GtkToggleButton" id="volume_button">
                 <property name="visible">True</property>
-                <property name="can-focus">False</property>
-                <property name="halign">start</property>
-                <property name="margin-left">6</property>
-                <property name="margin-start">6</property>
-                <property name="label" translatable="yes">Volume</property>
+                <property name="can-focus">True</property>
+                <property name="receives-default">False</property>
+                <property name="tooltip-text" translatable="yes">Mute</property>
+                <signal name="clicked" handler="mute_toggle" swapped="no"/>
+                <child>
+                  <object class="GtkImage" id="volume_icon">
+                    <property name="visible">True</property>
+                    <property name="can-focus">False</property>
+                    <property name="icon-name">audio-volume-medium-symbolic</property>
+                    <property name="icon_size">1</property>
+                  </object>
+                </child>
+                <style>
+                  <class name="image-button"/>
+                </style>
               </object>
               <packing>
-                <property name="expand">True</property>
+                <property name="expand">False</property>
                 <property name="fill">True</property>
                 <property name="position">0</property>
               </packing>
             </child>
             <child>
-              <object class="GtkVolumeButton" id="volume">
+              <object class="GtkSpinButton" id="volume">
                 <property name="visible">True</property>
                 <property name="can-focus">True</property>
-                <property name="focus-on-click">False</property>
-                <property name="halign">end</property>
+                <property name="margin-start">6</property>
+                <property name="max-length">3</property>
                 <property name="adjustment">volume_adjustment</property>
-                <property name="orientation">horizontal</property>
+                <property name="numeric">True</property>
+                <property name="value">90</property>
                 <signal name="value-changed" handler="volume_change" swapped="no"/>
-                <property name="value">0.90</property>
-                <property name="icons">audio-volume-muted-symbolic
-audio-volume-high-symbolic
-audio-volume-low-symbolic
-audio-volume-medium-symbolic</property>
               </object>
               <packing>
-                <property name="expand">False</property>
+                <property name="expand">True</property>
                 <property name="fill">True</property>
                 <property name="position">1</property>
               </packing>
