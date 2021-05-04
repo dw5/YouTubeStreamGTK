@@ -47,3 +47,12 @@ button.large {
 .poster-placeholder-image {
   background-color: #3d3846;
 }
+
+.playlist-overlay {
+  /* hex #3d3846 to rgb(61,56,70) */
+  background-color: rgba(61,56,70,0.7);
+}
+
+.playlist-icon, .playlist-label {
+  color: white;
+}

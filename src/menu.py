@@ -27,11 +27,22 @@ class Menu(Gtk.PopoverMenu):
     __gtype_name__ = 'Menu'
 
     autoplay_toggle = Gtk.Template.Child()
+    volume = Gtk.Template.Child()
 
     def __init__(self, app_window, **kwargs):
         super().__init__(**kwargs)
 
         self.app_window = app_window
+
+    @Gtk.Template.Callback()
+    def volume_change(self, event, data):
+        self.volume_slider(event.get_value())
+
+    def volume_slider(self, volume_value):
+        list = self.app_window.get_scroller_list()
+        children = list.get_children()
+        for child in children:
+            child.get_child().player.set_property("volume", volume_value)
 
     @Gtk.Template.Callback()
     def show_about(self, data):

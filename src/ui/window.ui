@@ -3,11 +3,6 @@
 <interface>
   <requires lib="gtk+" version="3.20"/>
   <requires lib="libhandy" version="1.2"/>
-  <object class="GtkAdjustment" id="volume_adjustment">
-    <property name="upper">1</property>
-    <property name="step-increment">.05</property>
-    <property name="page-increment">.1</property>
-  </object>
   <template class="StreamWindow" parent="HdyApplicationWindow">
     <property name="can-focus">False</property>
     <property name="hexpand">False</property>
@@ -25,48 +20,63 @@
           <object class="HdyHeaderBar" id="header_bar">
             <property name="visible">True</property>
             <property name="can-focus">False</property>
-            <property name="title" translatable="yes">Stream</property>
+            <property name="title">Stream</property>
             <property name="show-close-button">True</property>
             <child>
-              <object class="GtkToggleButton" id="search_bar_toggle">
+              <object class="GtkStack">
                 <property name="visible">True</property>
-                <property name="can-focus">True</property>
-                <property name="tooltip-text" translatable="yes">Search</property>
-                <property name="valign">center</property>
-                <property name="active">True</property>
-                <signal name="clicked" handler="search_toggle" swapped="no"/>
+                <property name="can-focus">False</property>
                 <child>
-                  <object class="GtkImage">
+                  <object class="GtkToggleButton" id="search_bar_toggle">
                     <property name="visible">True</property>
-                    <property name="can-focus">False</property>
-                    <property name="icon-name">edit-find-symbolic</property>
-                    <property name="icon_size">1</property>
+                    <property name="can-focus">True</property>
+                    <property name="tooltip-text" translatable="yes">Search</property>
+                    <property name="valign">center</property>
+                    <property name="active">True</property>
+                    <signal name="clicked" handler="search_toggle" swapped="no"/>
+                    <child>
+                      <object class="GtkImage">
+                        <property name="visible">True</property>
+                        <property name="can-focus">False</property>
+                        <property name="icon-name">edit-find-symbolic</property>
+                        <property name="icon_size">1</property>
+                      </object>
+                    </child>
+                    <style>
+                      <class name="image-button"/>
+                    </style>
                   </object>
+                  <packing>
+                    <property name="position">1</property>
+                  </packing>
                 </child>
-                <style>
-                  <class name="image-button"/>
-                </style>
+                <child>
+                  <object class="GtkButton" id="back_button">
+                    <property name="visible">False</property>
+                    <property name="can-focus">True</property>
+                    <property name="tooltip-text" translatable="yes">Back</property>
+                    <property name="valign">center</property>
+                    <signal name="clicked" handler="back_navigate" swapped="no"/>
+                    <child>
+                      <object class="GtkImage" id="back_icon">
+                        <property name="visible">True</property>
+                        <property name="can-focus">False</property>
+                        <property name="icon-name">go-previous-symbolic</property>
+                        <property name="icon_size">1</property>
+                        <style>
+                          <class name="image-button"/>
+                        </style>
+                      </object>
+                    </child>
+                  </object>
+                  <packing>
+                    <property name="position">1</property>
+                  </packing>
+                </child>
               </object>
             </child>
             <child>
-              <object class="GtkVolumeButton" id="volume">
-                <property name="visible">True</property>
-                <property name="can-focus">True</property>
-                <property name="tooltip-text" translatable="yes">Volume</property>
-                <property name="adjustment">volume_adjustment</property>
-                <property name="value">0.90</property>
-                <property name="icons">audio-volume-muted-symbolic
-audio-volume-high-symbolic
-audio-volume-low-symbolic
-audio-volume-medium-symbolic</property>
-                <signal name="value-changed" handler="volume_change" swapped="no"/>
-                <style>
-                  <class name="image-button"/>
-                </style>
-              </object>
-            </child>
-            <child>
-              <object class="GtkStack" id="status_staack">
+              <object class="GtkStack" id="status_stack">
                 <property name="visible">True</property>
                 <property name="can-focus">False</property>
                 <child>
@@ -179,32 +189,71 @@ audio-volume-medium-symbolic</property>
                   </packing>
                 </child>
                 <child>
-                  <object class="GtkScrolledWindow" id="scroller">
-                    <property name="visible">False</property>
-                    <property name="can-focus">True</property>
-                    <property name="hexpand">False</property>
-                    <property name="vexpand">False</property>
-                    <property name="hscrollbar-policy">never</property>
-                    <signal name="scroll-event" handler="swallow_fullscreen_scroll_event" swapped="no"/>
-                    <signal name="edge-reached" handler="load_more" swapped="no"/>
+                  <object class="GtkStack" id="lists_stack">
+                    <property name="visible">True</property>
+                    <property name="can-focus">False</property>
                     <child>
-                      <object class="GtkFlowBox" id="results_list">
+                      <object class="GtkScrolledWindow" id="scroller">
+                        <property name="visible">False</property>
                         <property name="can-focus">True</property>
-                        <property name="visible">True</property>
-                        <property name="vexpand">False</property>
                         <property name="hexpand">False</property>
-                        <property name="max-children-per-line">1</property>
-                        <property name="selection-mode">none</property>
-                        <property name="activate-on-single-click">False</property>
+                        <property name="vexpand">False</property>
+                        <property name="hscrollbar-policy">never</property>
+                        <signal name="scroll-event" handler="swallow_fullscreen_scroll_event" swapped="no"/>
+                        <signal name="edge-reached" handler="load_more" swapped="no"/>
                         <child>
-                          <placeholder/>
+                          <object class="HdyClamp" id="results_clamp">
+                            <property name="visible">True</property>
+                            <property name="can-focus">False</property>
+                            <child>
+                              <object class="GtkFlowBox" id="results_list">
+                                <property name="can-focus">True</property>
+                                <property name="visible">True</property>
+                                <property name="vexpand">False</property>
+                                <property name="hexpand">False</property>
+                                <property name="max-children-per-line">1</property>
+                                <property name="selection-mode">none</property>
+                                <property name="activate-on-single-click">False</property>
+                                <child>
+                                  <placeholder/>
+                                </child>
+                              </object>
+                            </child>
+                          </object>
+                        </child>
+                      </object>
+                    </child>
+                    <child>
+                      <object class="GtkScrolledWindow" id="playlist_scroller">
+                        <property name="visible">False</property>
+                        <property name="can-focus">True</property>
+                        <property name="hexpand">False</property>
+                        <property name="vexpand">False</property>
+                        <property name="hscrollbar-policy">never</property>
+                        <signal name="scroll-event" handler="swallow_fullscreen_scroll_event" swapped="no"/>
+                        <child>
+                          <object class="HdyClamp" id="playlist_clamp">
+                            <property name="visible">True</property>
+                            <property name="can-focus">False</property>
+                            <child>
+                              <object class="GtkFlowBox" id="playlist_list">
+                                <property name="can-focus">True</property>
+                                <property name="visible">True</property>
+                                <property name="vexpand">False</property>
+                                <property name="hexpand">False</property>
+                                <property name="max-children-per-line">1</property>
+                                <property name="selection-mode">none</property>
+                                <property name="activate-on-single-click">False</property>
+                                <child>
+                                  <placeholder/>
+                                </child>
+                              </object>
+                            </child>
+                          </object>
                         </child>
                       </object>
                     </child>
                   </object>
-                  <packing>
-                    <property name="position">3</property>
-                  </packing>
                 </child>
                 <child>
                   <object class="GtkBox" id="error_box">
