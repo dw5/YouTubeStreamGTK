@@ -28,7 +28,7 @@ from .results import ResultsBox
 from .instances import Instances
 
 # plugin style
-from .search import Search as DefaultSearch
+from .search import Search
 
 @Gtk.Template(resource_path='/sm/puri/Stream/ui/window.ui')
 class StreamWindow(Handy.ApplicationWindow):
@@ -40,16 +40,22 @@ class StreamWindow(Handy.ApplicationWindow):
     search_bar_toggle = Gtk.Template.Child()
     search_bar = Gtk.Template.Child()
 
+    back_button = Gtk.Template.Child()
     menu_button = Gtk.Template.Child()
 
     status_page = Gtk.Template.Child()
-    spinner = Gtk.Template.Child()
+    status_spinner = Gtk.Template.Child()
     error_box = Gtk.Template.Child()
     error_heading = Gtk.Template.Child()
     error_text = Gtk.Template.Child()
 
     scroller = Gtk.Template.Child()
     results_list = Gtk.Template.Child()
+    results_clamp = Gtk.Template.Child()
+
+    playlist_scroller = Gtk.Template.Child()
+    playlist_list = Gtk.Template.Child()
+    playlist_clamp = Gtk.Template.Child()
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
@@ -59,12 +65,13 @@ class StreamWindow(Handy.ApplicationWindow):
         self.is_fullscreen = False
         self.inhibit_cookie = 0
         self.strong_instances = []
-        self.video_results_meta = []
+        self.results_meta = []
+        self.playlist_results_meta = []
         instances = Instances(app_window = self)
         instances.get_strong_instances()
 
-        menu = Menu(app_window = self)
-        self.menu_button.set_popover(menu)
+        self.menu = Menu(app_window = self)
+        self.menu_button.set_popover(self.menu)
 
         provider = Gtk.CssProvider()
         provider.load_from_resource('/sm/puri/Stream/ui/stream.css')
@@ -78,43 +85,108 @@ class StreamWindow(Handy.ApplicationWindow):
         # toggle the True/False from what is current
         self.search_bar.set_visible(self.search_bar_toggle.get_active())
 
-    def clear_results(self):
-        self.video_results_meta = []
-        children = self.results_list.get_children()
+    @Gtk.Template.Callback()
+    def back_navigate(self, button):
+        self.pause_all(None)
+        # restore search visible
+        self.search_bar_toggle.set_visible(True)
+        self.search_bar_toggle.set_active(True)
+        self.search_bar.set_visible(True)
+        self.header_bar.set_property('title', "Stream")
+
+        self.back_button.set_visible(False)
+        self.scroller.set_visible(True)
+        self.playlist_scroller.set_visible(False)
+
+    # this is called from code and from the ui XML upon
+    # delete-text button press in search-entry
+    @Gtk.Template.Callback()
+    def clear_results(self, start_pos, end_pos, data):
+        # only clear results on cleared search bar (or called directly)
+        if end_pos == 0:
+            self.page_results = 1
+            self.results_meta = []
+            children = self.results_list.get_children()
+            for child in children:
+                child.destroy()
+
+            self.hide_error_box()
+            self.scroller.set_visible(False)
+            self.status_page.set_visible(True)
+            self.clear_playlist(0, 0, None)
+
+    def clear_playlist(self, start_pos, end_pos, data):
+        self.page_playlist = 1
+        self.playlist_results_meta = []
+        children = self.playlist_list.get_children()
         for child in children:
             child.destroy()
 
+        self.playlist_scroller.set_visible(False)
+
     @Gtk.Template.Callback()
     def search_entry(self, search_box):
+        self.clear_results(0, 0, None)
         self.status_page.set_visible(False)
 
         self.hide_error_box()
-        self.spinner.set_visible(True)
+        self.scroller.set_visible(False)
 
-        search_query = search_box.get_text()
+        self.search_query = search_box.get_text()
 
-        self.clear_results()
+        # determine app window size at time of search
+        size = self.get_size()
+        self.app_orig_width = size.width
+        self.app_orig_height = size.height
+
+        # this is a HdyClamp to tighten the box around the dynamic
+        # player box size (determined by window size at time of search)
+        # not allowing long text titles to expand the results window
+        results_width = int(self.app_orig_width)
+        self.results_clamp.set_property('maximum-size', results_width)
+        self.results_clamp.set_property('tightening-threshold', results_width)
+        self.playlist_clamp.set_property('maximum-size', results_width)
+        self.playlist_clamp.set_property('tightening-threshold', results_width)
 
         if not self.strong_instances:
             self.show_error_box("Service Failure",
                 "No strong video server instances found yet. Try again shortly.")
         else:
-            search = DefaultSearch(app_window = self,
-                                   spinner = self.spinner,
-                                   add_result_meta = self.add_result_meta)
-            search.do_search(query = search_query)
+            self.search = Search(app_window = self,
+                toggle_status_spinner = self.toggle_status_spinner,
+                scroller = self.scroller,
+                add_result_meta = self.add_result_meta)
+            self.search.do_search(query = self.search_query, page = self.page_results)
 
-    def add_result_meta(self, video_meta):
-        self.video_results_meta.append(video_meta)
-        index_meta = len(self.video_results_meta) - 1
+    def toggle_status_spinner(self, toggle):
+        self.status_spinner.set_visible(toggle)
+        self.status_icon.set_visible(not toggle)
+
+    def add_result_meta(self, meta):
+        # stores an array of results for playlists and videos
+        self.results_meta.append(meta)
+        index_meta = len(self.results_meta) - 1
         self.add_result(index_meta)
 
     def add_result(self, index):
         results_box = ResultsBox(self)
         self.results_list.add(results_box)
 
-        video_meta = self.video_results_meta[index]
-        results_box.setup_stream(video_meta)
+        meta = self.results_meta[index]
+        results_box.setup_stream(meta)
+
+    def add_playlist_result_meta(self, meta):
+        # stores an array of results for playlists and videos
+        self.playlist_results_meta.append(meta)
+        index_playlist_meta = len(self.playlist_results_meta) - 1
+        self.add_playlist_result(index_playlist_meta)
+
+    def add_playlist_result(self, index):
+        playlist_results_box = ResultsBox(self)
+        self.playlist_list.add(playlist_results_box)
+
+        meta = self.playlist_results_meta[index]
+        playlist_results_box.setup_stream(meta)
 
     @Gtk.Template.Callback()
     def load_more(self, event, data):
@@ -123,6 +195,22 @@ class StreamWindow(Handy.ApplicationWindow):
         upper = vadj.get_upper()
         page_size = vadj.get_page_size()
 
+        if position + page_size >= upper:
+            self.page_results += 1
+            self.search.do_search(query = self.search_query, page = self.page_results)
+
+#    @Gtk.Template.Callback()
+#    def load_more_playlist(self, event, data):
+#        vadj = self.playlist_scroller.get_vadjustment()
+#        position = vadj.get_value()
+#        upper = vadj.get_upper()
+#        page_size = vadj.get_page_size()
+#
+#        if position + page_size >= upper:
+#            self.page_playlist += 1
+#            # initially created in results.py upon playlist creation
+#            self.playlist_search.do_playlist(playlist_id = self.playlist_id, page = self.page_playlist)
+#
     def fullscreen_toggle(self, focus_child):
         if self.is_fullscreen:
             focus_child.get_child().unfullscreen_button(None)
@@ -139,24 +227,60 @@ class StreamWindow(Handy.ApplicationWindow):
 #    def open_primary_menu(self, widget, ev):
 #        print("in open primary menu")
 
+    def get_scroller_list(self):
+        if self.playlist_scroller.get_visible():
+            return self.playlist_list
+        else:
+            return self.results_list
+
+    def autoplay_next(self):
+        if self.menu.autoplay_toggle.get_active():
+            list = self.get_scroller_list()
+            focus_child = list.get_focus_child()
+            if focus_child:
+                focus_index = focus_child.get_index()
+                focus_next = list.get_child_at_index(focus_index + 1)
+                if focus_next:
+                    self.play_pause_toggle(focus_next)
+
     @Gtk.Template.Callback()
     def keypress_listener(self, widget, ev):
-        key = Gdk.keyval_name(ev.keyval)
-        focus_child = self.results_list.get_focus_child()
+        list = self.get_scroller_list()
+        focus_child = list.get_focus_child()
         if focus_child:
+            # key values are from gdk/gdkkeysyms.h
+            key = Gdk.keyval_name(ev.keyval)
             if key == "Escape":
                 focus_child.get_child().unfullscreen_button(None)
-            if key == "space":
+            elif key == "space":
                 self.play_pause_toggle(focus_child)
-            if key == "f":
+            elif key == "f":
                 self.fullscreen_toggle(focus_child)
+            elif key == "Up":
+                self.volume_up_keypress()
+                return True
+            elif key == "Down":
+                self.volume_down_keypress()
+                return True
+            elif key == "Left":
+                focus_child.get_child().reverse_keypress()
+                return True
+            elif key == "Right":
+                focus_child.get_child().forward_keypress()
+                return True
+
+    def get_all_flowboxes(self):
+        flowboxes = self.results_list.get_children()
+        flowboxes.extend(self.playlist_list.get_children())
+        return flowboxes
 
     def pause_all(self, active_window):
-        flowboxes = self.results_list.get_children()
+        flowboxes = self.get_all_flowboxes()
         for flowbox in flowboxes:
-            result_window = flowbox.get_child()
-            if result_window != active_window:
-                flowbox.get_child().null_out_player()
+            if flowbox:
+                result_window = flowbox.get_child()
+                if result_window != active_window:
+                    flowbox.get_child().null_out_player()
 
     def inhibit_app(self):
         self.inhibit_cookie = self.application.inhibit(self,
@@ -174,7 +298,7 @@ class StreamWindow(Handy.ApplicationWindow):
         self.error_text.set_label("...")
 
     def show_error_box(self, heading, text):
-        self.spinner.set_visible(False)
+        self.toggle_status_spinner(False)
         self.error_box.set_visible(True)
         self.error_heading.set_label(heading)
         self.error_text.set_label(text)
@@ -183,3 +307,26 @@ class StreamWindow(Handy.ApplicationWindow):
     def swallow_fullscreen_scroll_event(self, event, data):
         if self.is_fullscreen:
             return True
+
+    def focus_child(self):
+        # grab focus of playing video on keypress
+        list = self.get_scroller_list()
+        focus_child = list.get_focus_child()
+        if focus_child:
+            focus_child.get_child().box_grab_focus()
+
+    def volume_up_keypress(self):
+        current_volume = self.menu.volume.get_value()
+        louder = 100
+        if current_volume <= 90:
+            louder = current_volume + 10
+        self.menu.volume.set_value(louder)
+        self.focus_child()
+
+    def volume_down_keypress(self):
+        current_volume = self.menu.volume.get_value()
+        quieter = 0
+        if current_volume >= 10:
+            quieter = current_volume - 10
+        self.menu.volume.set_value(quieter)
+        self.focus_child()

@@ -25,19 +25,23 @@ from gi.repository import Gdk, GdkPixbuf, Gio, GLib, Gst, Gtk
 Gst.init(None)
 Gst.init_check(None)
 
+from .search import Search
+
 @Gtk.Template(resource_path='/sm/puri/Stream/ui/results.ui')
 class ResultsBox(Gtk.Box):
     __gtype_name__ = 'ResultsBox'
 
-    event_box = Gtk.Template.Child()
     player_box = Gtk.Template.Child()
     poster_image = Gtk.Template.Child()
     controls_box = Gtk.Template.Child()
+    event_box = Gtk.Template.Child()
     play = Gtk.Template.Child()
     pause = Gtk.Template.Child()
     slider = Gtk.Template.Child()
     time_viewed = Gtk.Template.Child()
     time_remaining = Gtk.Template.Child()
+    playlist_overlay = Gtk.Template.Child()
+    playlist_label = Gtk.Template.Child()
 
     audio_dl = Gtk.Template.Child()
     audio_dl_image = Gtk.Template.Child()
@@ -52,7 +56,8 @@ class ResultsBox(Gtk.Box):
     channel = Gtk.Template.Child()
     duration = Gtk.Template.Child()
 
-    window_to_player_box_padding = 28
+    window_to_results_margin = 8
+    window_to_player_box_margin = 28
 
     def __init__(self, app_window, **kwargs):
         super().__init__(**kwargs)
@@ -62,13 +67,8 @@ class ResultsBox(Gtk.Box):
         # listen for motion on the player box for controls show/hide
         self.event_box.add_events(Gdk.EventMask.POINTER_MOTION_MASK)
 
-        # determine window width at time of search
         # do ratio calculation from width (16:9 or 1.77)
-        # retain aspect ratio
-        size = self.app_window.get_size()
-        self.app_orig_width = size.width
-        self.app_orig_height = size.height
-        self.video_box_width = int(size.width - self.window_to_player_box_padding)
+        self.video_box_width = int(self.app_window.app_orig_width - self.window_to_player_box_margin)
         self.video_box_height = int(self.video_box_width / 1.77)
 
         self.player_box.set_size_request(self.video_box_width, self.video_box_height)
@@ -115,23 +115,46 @@ class ResultsBox(Gtk.Box):
         stream = poster_file.read_async(0, None,
                 self.on_file_read, None)
 
-    def setup_stream(self, video_meta):
-        self.video_id = video_meta['videoId']
-        self.video_title = video_meta['title']
-        self.video_channel = video_meta['author']
-        self.poster_uri = video_meta['poster_uri']
-        video_duration = self.get_readable_seconds(video_meta['lengthSeconds'])
+    def setup_stream(self, meta):
+        if 'type' in meta:
+            self.type = meta['type']
+            if meta['type'] == 'video':
+                self.setup_meta(meta)
+                self.setup_video(meta)
+            elif meta['type'] == 'playlist':
+                self.setup_meta(meta)
+                self.setup_playlist(meta)
 
-        self.title.set_label(self.video_title)
-        self.channel.set_label(self.video_channel)
-        self.duration.set_label(video_duration)
+    def setup_meta(self, meta):
+        self.meta_title = meta['title']
+        meta_channel = meta['author']
+        poster_uri = meta['poster_uri']
+        # initialize video duration
+        self.video_duration = 0
+
+        self.title.set_label(self.meta_title)
+        self.channel.set_label(meta_channel)
+
+        poster_file = Gio.File.new_for_uri(poster_uri)
+        self.stream_at_scale_async(poster_file)
+
+    def setup_playlist(self, playlist_meta):
+        self.app_window.playlist_id = playlist_meta['playlistId']
+        self.playlist_overlay.set_visible(True)
+        self.controls_box.set_visible(False)
+
+        # switch to playlist display
+        self.duration.set_visible(False)
+        self.playlist_label.set_visible(True)
+
+    def setup_video(self, video_meta):
+        self.time_viewed.set_label('0:00')
+        self.video_duration = self.get_readable_seconds(video_meta['lengthSeconds'])
+        self.duration.set_label(self.video_duration)
+        self.time_remaining.set_label(f"-{self.video_duration}")
 
         self.player.set_property("uri", video_meta['video_uri'])
         self.player.set_property("video-sink", self.sink)
-
-        poster_file = Gio.File.new_for_uri(video_meta['poster_uri'])
-
-        self.stream_at_scale_async(poster_file)
 
         if 'audio_dl_uri' in video_meta:
             if video_meta['audio_dl_uri']:
@@ -161,7 +184,7 @@ class ResultsBox(Gtk.Box):
 
             position_value = float(position) / Gst.SECOND * self.percent
 
-            if int(duration) > 0:
+            if duration > 0 and position > 0:
                 viewed_seconds = int(position / Gst.SECOND)
                 remaining_seconds = int((duration - position) / Gst.SECOND)
                 viewed = self.get_readable_seconds(viewed_seconds)
@@ -171,19 +194,16 @@ class ResultsBox(Gtk.Box):
                 self.time_remaining.set_label(f"-{remaining}")
 
                 if int(position / Gst.SECOND) >= int(duration / Gst.SECOND):
-                    self.null_out_player()
+                    GLib.timeout_add(500, self.null_out_player)
+                    GLib.timeout_add(600, self.app_window.autoplay_next)
 
-            # is negative number when not successful, so put it to 0
-            if not success:
-                position_value = 0
-            
-            try:
-                # block seek slider function so it doesn't loop itself
-                self.slider.handler_block_by_func(self.seek_slider)
-                self.slider.set_value(position_value)
-                self.slider.handler_unblock_by_func(self.seek_slider)
-            except:
-                return False
+                try:
+                    # block seek slider function so it doesn't loop itself
+                    self.slider.handler_block_by_func(self.seek_slider)
+                    self.slider.set_value(position_value)
+                    self.slider.handler_unblock_by_func(self.seek_slider)
+                except:
+                    return False
 
         return True
 
@@ -199,7 +219,7 @@ class ResultsBox(Gtk.Box):
             self.show_error_icon('audio')
             return False
 
-        dest_title = self.strictify_name(self.video_title)
+        dest_title = self.strictify_name(self.meta_title)
         dest_path = f"{dest_dir}/{dest_title}.{dest_ext}"
         dest = Gio.File.new_for_path(dest_path)
         dl_stream.copy_async(dest, Gio.FileCopyFlags.OVERWRITE,
@@ -216,7 +236,7 @@ class ResultsBox(Gtk.Box):
             self.show_error_icon('video')
             return False
 
-        dest_title = self.strictify_name(self.video_title)
+        dest_title = self.strictify_name(self.meta_title)
         dest_path = f"{dest_dir}/{dest_title}.{dest_ext}"
         dest = Gio.File.new_for_path(dest_path)
         flags = Gio.FileCopyFlags
@@ -283,8 +303,18 @@ class ResultsBox(Gtk.Box):
         self.show_progress_icon('video')
         self.download_video_uri(self.video_dl_uri)
 
+    def box_grab_focus(self):
+        list = self.app_window.get_scroller_list()
+        if list.get_focus_child():
+            # grab the parent flowboxchild and focus it
+            # to snap it into frame
+            list.get_focus_child().grab_focus()
+        # grab the result box to enable future focus snapping
+        self.grab_focus()
+
     @Gtk.Template.Callback()
     def play_button(self, button):
+        self.box_grab_focus()
         # loop through all child results pausing them
         self.app_window.pause_all(self)
 
@@ -303,15 +333,24 @@ class ResultsBox(Gtk.Box):
         # allow seeking
         self.slider.set_sensitive(True)
 
+        app_volume = self.app_window.menu.volume.get_value() / 100
+        self.player.set_property("volume", app_volume)
+
         # update slider to track video time in slider
         GLib.timeout_add_seconds(1, self.update_slider)
 
     def null_out_player(self):
         self.inactivate_player()
         self.player.set_state(Gst.State.NULL)
+        self.slider.set_value(0)
+        self.time_viewed.set_label('0:00')
+        self.time_remaining.set_label(f"-{self.video_duration}")
+        self.video_widget.hide()
+        self.poster_image.show()
 
     @Gtk.Template.Callback()
     def pause_button(self, button):
+        self.box_grab_focus()
         self.inactivate_player()
         self.player.set_state(Gst.State.PAUSED)
 
@@ -329,19 +368,16 @@ class ResultsBox(Gtk.Box):
         self.poster_image.set_size_request(width, height)
         self.video_widget.set_size_request(width, height)
 
-    def delay_grab(self):
-        self.grab_focus()
-
     @Gtk.Template.Callback()
     def fullscreen_button(self, button):
         self.fullscreen.set_visible(False)
         self.unfullscreen.set_visible(True)
         self.app_window.fullscreen()
         self.app_window.is_fullscreen = True
-        self.app_window.search_bar_toggle.set_active(False)
-        self.app_window.search_bar.set_visible(False)
         self.app_window.header_bar.set_visible(False)
         self.details.set_visible(False)
+
+        self.app_window.search_bar.set_visible(False)
 
         set_width = int(Gdk.Screen.get_default().get_width())
         set_height = int(Gdk.Screen.get_default().get_height())
@@ -351,9 +387,7 @@ class ResultsBox(Gtk.Box):
         results_context.remove_class("results")
         results_context.add_class("fullscreen")
 
-        # grabbing happens before resize completes
-        # adding a slight delay to grab focus after resize completes
-        GLib.timeout_add(50, self.delay_grab)
+        GLib.timeout_add(50, self.box_grab_focus)
 
         # horizonal scrollbar, vertical scrollbar (do last)
         scroller = self.app_window.scroller
@@ -366,26 +400,28 @@ class ResultsBox(Gtk.Box):
         self.unfullscreen.set_visible(False)
         self.app_window.unfullscreen()
         self.app_window.is_fullscreen = False
-        self.app_window.search_bar_toggle.set_active(True)
-        self.app_window.search_bar.set_visible(True)
+        # if on scroller show search toggle active result
         self.app_window.header_bar.set_visible(True)
         self.details.set_visible(True)
+
+        if not self.app_window.playlist_scroller.get_visible():
+            self.app_window.search_bar.set_visible(self.app_window.search_bar_toggle.get_active())
 
         results_context = self.get_style_context()
         results_context.remove_class("fullscreen")
         results_context.add_class("results")
 
-        set_width = int(self.app_orig_width - self.window_to_player_box_padding)
+        set_width = int(self.app_window.app_orig_width - self.window_to_player_box_margin)
         set_height = int(set_width / 1.77)
 
         self.resize_player(set_width, set_height)
-        self.app_window.resize(self.app_orig_width, self.app_orig_height)
+        self.app_window.resize(self.app_window.app_orig_width, self.app_window.app_orig_height)
 
         scroller = self.app_window.scroller
         scroller.set_policy(Gtk.PolicyType.NEVER, Gtk.PolicyType.AUTOMATIC)
         scroller.set_kinetic_scrolling(True)
 
-        self.grab_focus()
+        GLib.timeout_add(50, self.box_grab_focus)
 
     @Gtk.Template.Callback()
     def seek_slider(self, scale):
@@ -396,24 +432,71 @@ class ResultsBox(Gtk.Box):
             Gst.SeekFlags.FLUSH | Gst.SeekFlags.KEY_UNIT,
             seek * Gst.SECOND / self.percent)
 
+    def reverse_keypress(self):
+        self.box_grab_focus()
+        if self.app_window.is_playing:
+            success, position = self.player.query_position(Gst.Format.TIME)
+            seek = 0
+            # extra fast keypresses yield a -1 for position
+            if position > 0:
+                if position / Gst.SECOND >= 10:
+                    seek = position - (10 * Gst.SECOND)
+                self.player.seek_simple(Gst.Format.TIME,
+                    Gst.SeekFlags.FLUSH | Gst.SeekFlags.KEY_UNIT, seek)
+
+    def forward_keypress(self):
+        self.box_grab_focus()
+        if self.app_window.is_playing:
+            p_success, position = self.player.query_position(Gst.Format.TIME)
+            d_success, duration = self.player.query_duration(Gst.Format.TIME)
+            seek = duration
+            # extra fast keypresses yield a -1 for position
+            if position > 0:
+                if position <= duration - (10 * Gst.SECOND):
+                    seek = position + (10 * Gst.SECOND)
+                self.player.seek_simple(Gst.Format.TIME,
+                    Gst.SeekFlags.FLUSH | Gst.SeekFlags.KEY_UNIT, seek)
+
     def poll_mouse(self):
         now_is = int(GLib.get_current_time())
-        if (int(now_is) - (self.last_move)) >= 1:
+        if (int(now_is) - (self.last_move)) >= 2:
             if self.controls_box.get_visible():
                 self.controls_box.set_visible(False)
 
     @Gtk.Template.Callback()
-    def event_box_mouse_click(self, event, data):
-        if self.app_window.is_playing:
-            self.pause_button(None)
-        self.event_box_mouse_action(event, data)
+    def event_mouse_click(self, event, data):
+        if self.playlist_overlay.get_visible():
+            self.app_window.pause_all(self)
+            self.app_window.clear_playlist(0, 0, None)
+
+            self.app_window.search_bar_toggle.set_visible(False)
+            self.app_window.search_bar.set_visible(False)
+            self.app_window.header_bar.set_property('title', "Playlist")
+
+            self.app_window.back_button.set_visible(True)
+            self.app_window.scroller.set_visible(False)
+            self.app_window.playlist_scroller.set_visible(True)
+
+            self.app_window.playlist_search = Search(app_window = self.app_window,
+                toggle_status_spinner = self.app_window.toggle_status_spinner,
+                scroller = self.app_window.playlist_scroller,
+                add_result_meta = self.app_window.add_playlist_result_meta)
+            self.app_window.playlist_search.do_playlist(playlist_id = self.app_window.playlist_id, page = self.app_window.page_playlist)
+
+        else:
+            if self.app_window.is_playing:
+                self.pause_button(None)
+            else:
+                self.play_button(None)
+            self.event_mouse_action(event, data)
 
     @Gtk.Template.Callback()
-    def event_box_mouse_action(self, event, data):
-        self.last_move = int(GLib.get_current_time())
-        GLib.timeout_add_seconds(2, self.poll_mouse)
-        if not self.controls_box.get_visible():
-            self.controls_box.set_visible(True)
+    def event_mouse_action(self, event, data):
+        if not self.playlist_overlay.get_visible():
+            self.last_move = int(GLib.get_current_time())
+            GLib.timeout_add_seconds(2, self.poll_mouse)
+            if not self.controls_box.get_visible():
+                self.controls_box.set_visible(True)
 
     @Gtk.Template.Callback()
     def swallow_slider_scroll_event(self, event, data):

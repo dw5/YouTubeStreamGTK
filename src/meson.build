@@ -19,7 +19,7 @@ conf.set('pkgdatadir', pkgdatadir)
 
 configure_file(
   input: 'stream.in',
-  output: 'stream',
+  output: 'purism-stream',
   configuration: conf,
   install: true,
   install_dir: get_option('bindir')

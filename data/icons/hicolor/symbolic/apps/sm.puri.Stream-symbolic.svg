@@ -13,7 +13,10 @@
    version="1.1"
    id="SVGRoot"
    sodipodi:docname="sm.puri.Stream-symbolic.svg"
-   inkscape:version="1.0.2 (e86c870879, 2021-01-15)">
+   inkscape:version="1.0.2 (e86c870879, 2021-01-15)"
+   inkscape:export-filename="/home/todd/Projects/deb/stream-0.1.0-1/data/icons/hicolor/symbolic/apps/sm.puri.Stream-symbolic.png"
+   inkscape:export-xdpi="96.000008"
+   inkscape:export-ydpi="96.000008">
   <defs
      id="defs2894" />
   <sodipodi:namedview
@@ -56,17 +59,17 @@
      inkscape:groupmode="layer"
      id="layer1">
     <rect
-       style="display:inline;fill:#000000;fill-opacity:1;stroke:#000000;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:4;stroke-dasharray:none;enable-background:new"
+       style="display:inline;fill:none;fill-opacity:1;stroke:#000000;stroke-width:1;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:4;stroke-dasharray:none;enable-background:new"
        id="rect1460"
-       width="14"
-       height="10.973247"
-       x="1"
-       y="2.5133767"
-       rx="1.2611473"
-       ry="1.2611473" />
+       width="15"
+       height="11"
+       x="0.5"
+       y="2.5"
+       rx="1.3512292"
+       ry="1.264222" />
     <path
        sodipodi:type="star"
-       style="display:inline;fill:#ffffff;fill-opacity:1;stroke:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:4;stroke-dasharray:none;enable-background:new"
+       style="display:inline;fill:#000000;fill-opacity:1;stroke:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:4;stroke-dasharray:none;enable-background:new"
        id="path1490"
        sodipodi:sides="3"
        sodipodi:cx="-7.7665677"
@@ -83,14 +86,14 @@
        inkscape:transform-center-y="2.079058e-06"
        d="m -6.0000002,6.5348086 c 0,3.0597846 0,3.0597846 -2.6498512,1.5298923 -2.6498516,-1.5298923 -2.6498516,-1.5298923 0,-3.0597846 2.6498512,-1.5298923 2.6498512,-1.5298923 2.6498512,1.5298923 z" />
     <path
-       style="fill:none;fill-rule:evenodd;stroke:#ffffff;stroke-width:1;stroke-linecap:round;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
-       d="M 2,11.499993 H 14"
+       style="fill:none;fill-rule:evenodd;stroke:#000000;stroke-width:1;stroke-linecap:round;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
+       d="M 2,10.499993 H 14"
        id="path4444" />
     <circle
-       style="fill:#000000;fill-opacity:1;stroke:#ffffff;stroke-width:1;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
+       style="fill:#ffffff;fill-opacity:1;stroke:#000000;stroke-width:1;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
        id="path4446"
        cx="4.2232146"
-       cy="11.5"
+       cy="10.5"
        r="1" />
   </g>
 </svg>

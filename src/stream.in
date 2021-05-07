@@ -28,7 +28,7 @@ localedir = '@localedir@'
 
 sys.path.insert(1, pkgdatadir)
 signal.signal(signal.SIGINT, signal.SIG_DFL)
-gettext.install('stream', localedir)
+gettext.install('purism-stream', localedir)
 
 if __name__ == '__main__':
     import gi
