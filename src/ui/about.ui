@@ -4,6 +4,7 @@
   <template class="About" parent="GtkAboutDialog">
     <property name="can-focus">False</property>
     <property name="type-hint">dialog</property>
+    <property name="modal">1</property>
     <property name="program-name">Stream</property>
     <property name="copyright" translatable="yes">Copyright 2021 Purism, SPC</property>
     <property name="authors">Todd Weaver</property>
