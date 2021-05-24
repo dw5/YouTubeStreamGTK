@@ -9,6 +9,7 @@
     <property name="authors">Todd Weaver</property>
     <property name="artists">Todd Weaver</property>
     <property name="license-type">gpl-3-0</property>
+    <property name="logo-icon-name">sm.puri.Stream</property>
     <signal name="response" handler="about_response" swapped="no"/>
     <child internal-child="vbox">
       <object class="GtkBox">
