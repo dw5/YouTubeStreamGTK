@@ -48,6 +48,11 @@ class StreamWindow(Handy.ApplicationWindow):
     error_box = Gtk.Template.Child()
     error_heading = Gtk.Template.Child()
     error_text = Gtk.Template.Child()
+    error_action_button = Gtk.Template.Child()
+
+    # lists stack holds both the scroller ScrollWindow
+    # and the playlist_scroller ScrollWindow
+    lists_stack = Gtk.Template.Child()
 
     scroller = Gtk.Template.Child()
     results_list = Gtk.Template.Child()
@@ -56,6 +61,18 @@ class StreamWindow(Handy.ApplicationWindow):
     playlist_scroller = Gtk.Template.Child()
     playlist_list = Gtk.Template.Child()
     playlist_clamp = Gtk.Template.Child()
+
+    # magic sizes:
+    # 16:9 (1.77)
+    # initial window width 1920 / 2 = 960
+    # initial video size 854x480
+    # small video size 332x186
+    # resize threshold 854 + margin (28) = 882
+    window_resize_threshold = 882
+    video_large_width = 854
+    video_small_width = 332
+    video_size_active = video_small_width
+    window_last_size = 'big'
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
@@ -67,8 +84,8 @@ class StreamWindow(Handy.ApplicationWindow):
         self.strong_instances = []
         self.results_meta = []
         self.playlist_results_meta = []
-        instances = Instances(app_window = self)
-        instances.get_strong_instances()
+        self.instances = Instances(app_window = self)
+        self.instances.get_strong_instances()
 
         self.menu = Menu(app_window = self)
         self.menu_button.set_popover(self.menu)
@@ -111,7 +128,7 @@ class StreamWindow(Handy.ApplicationWindow):
                 child.destroy()
 
             self.hide_error_box()
-            self.scroller.set_visible(False)
+            self.lists_stack.set_visible(False)
             self.status_page.set_visible(True)
             self.clear_playlist(0, 0, None)
 
@@ -130,31 +147,16 @@ class StreamWindow(Handy.ApplicationWindow):
         self.status_page.set_visible(False)
 
         self.hide_error_box()
-        self.scroller.set_visible(False)
+        self.lists_stack.set_visible(False)
 
         self.search_query = search_box.get_text()
 
-        # determine app window size at time of search
-        size = self.get_size()
-        self.app_orig_width = size.width
-        self.app_orig_height = size.height
-
-        # this is a HdyClamp to tighten the box around the dynamic
-        # player box size (determined by window size at time of search)
-        # not allowing long text titles to expand the results window
-        results_width = int(self.app_orig_width)
-        self.results_clamp.set_property('maximum-size', results_width)
-        self.results_clamp.set_property('tightening-threshold', results_width)
-        self.playlist_clamp.set_property('maximum-size', results_width)
-        self.playlist_clamp.set_property('tightening-threshold', results_width)
-
         if not self.strong_instances:
-            self.show_error_box("Service Failure",
-                "No strong video server instances found yet. Try again shortly.")
+            self.instances.get_strong_instances()
         else:
             self.search = Search(app_window = self,
                 toggle_status_spinner = self.toggle_status_spinner,
-                scroller = self.scroller,
+                lists_stack = self.lists_stack,
                 add_result_meta = self.add_result_meta)
             self.search.do_search(query = self.search_query, page = self.page_results)
 
@@ -233,11 +235,21 @@ class StreamWindow(Handy.ApplicationWindow):
         else:
             return self.results_list
 
-    def autoplay_next(self):
-        if self.menu.autoplay_toggle.get_active():
-            list = self.get_scroller_list()
-            focus_child = list.get_focus_child()
-            if focus_child:
+    def next_playback_action(self):
+        list = self.get_scroller_list()
+        focus_child = list.get_focus_child()
+        if focus_child:
+            action = "one"
+            stack = self.menu.mode_switcher.get_stack()
+            if stack:
+                action = stack.get_visible_child_name()
+
+            # check if video loop override is on
+            if action == "loop":
+                self.play_pause_toggle(focus_child)
+
+            # otherwise, check if user wants to auto play through list
+            elif action == "auto":
                 focus_index = focus_child.get_index()
                 focus_next = list.get_child_at_index(focus_index + 1)
                 if focus_next:
@@ -267,6 +279,12 @@ class StreamWindow(Handy.ApplicationWindow):
                 return True
             elif key == "Right":
                 focus_child.get_child().forward_keypress()
+                return True
+            elif key == "bracketleft":
+                self.speed_slower_keypress()
+                return True
+            elif key == "bracketright":
+                self.speed_faster_keypress()
                 return True
 
     def get_all_flowboxes(self):
@@ -304,6 +322,11 @@ class StreamWindow(Handy.ApplicationWindow):
         self.error_text.set_label(text)
 
     @Gtk.Template.Callback()
+    def reload_instances(self, event):
+        self.hide_error_box()
+        self.instances.get_strong_instances()
+
+    @Gtk.Template.Callback()
     def swallow_fullscreen_scroll_event(self, event, data):
         if self.is_fullscreen:
             return True
@@ -330,3 +353,42 @@ class StreamWindow(Handy.ApplicationWindow):
             quieter = current_volume - 10
         self.menu.volume.set_value(quieter)
         self.focus_child()
+
+    def speed_faster_keypress(self):
+        current_speed = self.menu.speed.get_value()
+        faster = current_speed + .25
+        self.menu.speed.set_value(faster)
+        self.focus_child()
+
+    def speed_slower_keypress(self):
+        current_speed = self.menu.speed.get_value()
+        slower = current_speed - .25
+        self.menu.speed.set_value(slower)
+        self.focus_child()
+
+    @Gtk.Template.Callback()
+    def screen_changed(self, event, data):
+        size = self.get_size()
+
+        # get the current clamp threshold
+        current_threshold = self.results_clamp.get_property('tightening-threshold')
+
+        trigger_resize = False
+        if size.width <= current_threshold and size.width <= self.window_resize_threshold:
+            self.video_size_active = self.video_small_width
+            if self.window_last_size == 'big':
+                self.window_last_size = 'small'
+                trigger_resize = True
+        elif size.width > current_threshold and size.width > self.window_resize_threshold:
+            self.video_size_active = self.video_large_width
+            if self.window_last_size == 'small':
+                self.window_last_size = 'big'
+                trigger_resize = True
+
+        if trigger_resize:
+            flowboxes = self.get_all_flowboxes()
+            for flowbox in flowboxes:
+                if flowbox:
+                    result_window = flowbox.get_child()
+                    if result_window:
+                        result_window.resize_results()

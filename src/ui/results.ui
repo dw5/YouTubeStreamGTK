@@ -298,26 +298,21 @@
                     <property name="can-focus">False</property>
                     <property name="spacing">8</property>
                     <child>
-                      <object class="GtkButton" id="speed">
+                      <object class="GtkButton" id="share">
                         <property name="visible">True</property>
                         <property name="sensitive">False</property>
                         <property name="can-focus">False</property>
                         <property name="receives-default">False</property>
-                        <property name="tooltip-text" translatable="yes">Adjust Speed</property>
+                        <property name="tooltip-text" translatable="yes">Share Url</property>
                         <property name="opacity">0.80</property>
                         <property name="halign">center</property>
                         <property name="valign">center</property>
-                        <signal name="clicked" handler="speed_button" swapped="no"/>
+                        <signal name="clicked" handler="share_button" swapped="no"/>
                         <child>
-                          <object class="GtkLabel">
+                          <object class="GtkImage">
                             <property name="visible">True</property>
                             <property name="can-focus">False</property>
-                            <property name="label">1x</property>
-                            <property name="justify">center</property>
-                            <attributes>
-                              <attribute name="weight" value="bold"/>
-                              <attribute name="scale" value="0.80000000000000004"/>
-                            </attributes>
+                            <property name="icon-name">emblem-shared-symbolic</property>
                           </object>
                         </child>
                         <style>
