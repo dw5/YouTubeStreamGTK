@@ -27,7 +27,7 @@ class Search:
         # for internal plugins only
         self.app_window = kwargs.get('app_window', None)
         self.toggle_status_spinner = kwargs.get('toggle_status_spinner', None)
-        self.scroller = kwargs.get('scroller', None)
+        self.lists_stack = kwargs.get('lists_stack', None)
 
         self.si_index = 0
         self.this_instance = self.app_window.strong_instances[self.si_index]
@@ -77,8 +77,8 @@ class Search:
                         first_video_meta = meta['videos'][0]
                         self.get_poster_url(first_video_meta, meta)
                         self.append_playlist(meta)
-            elif meta['type'] == 'channel':
-                print('channel')
+#            elif meta['type'] == 'channel':
+#                print('channel')
 
     def do_playlist(self, playlist_id, page):
         self.toggle_status_spinner(True)
@@ -186,7 +186,7 @@ class Search:
             self.search_video_ids.append(video_meta['videoId'])
 
             self.toggle_status_spinner(False)
-            self.scroller.set_visible(True)
+            self.lists_stack.set_visible(True)
 
     def append_playlist(self, playlist_meta):
         # add the playlist to the list
@@ -197,7 +197,7 @@ class Search:
         self.search_playlist_ids.append(playlist_meta['playlistId'])
 
         self.toggle_status_spinner(False)
-        self.scroller.set_visible(True)
+        self.lists_stack.set_visible(True)
 
     def get_download_uris(self, video_meta):
         # get download link urls based on (future) user-config

@@ -7,10 +7,11 @@
     <property name="can-focus">False</property>
     <property name="hexpand">False</property>
     <property name="vexpand">True</property>
-    <property name="default-width">882</property>
-    <property name="default-height">652</property>
+    <property name="default-width">960</property>
+    <property name="default-height">720</property>
     <property name="icon-name">sm.puri.Stream</property>
     <signal name="key-press-event" handler="keypress_listener" swapped="no"/>
+    <signal name="size-allocate" handler="screen_changed" swapped="no"/>
     <child>
       <object class="GtkBox">
         <property name="visible">True</property>
@@ -104,7 +105,7 @@
                   <packing>
                     <property name="position">1</property>
                   </packing>
-	        </child>
+                </child>
               </object>
               <packing>
                 <property name="pack-type">end</property>
@@ -190,11 +191,11 @@
                 </child>
                 <child>
                   <object class="GtkStack" id="lists_stack">
-                    <property name="visible">True</property>
+                    <property name="visible">False</property>
                     <property name="can-focus">False</property>
                     <child>
                       <object class="GtkScrolledWindow" id="scroller">
-                        <property name="visible">False</property>
+                        <property name="visible">True</property>
                         <property name="can-focus">True</property>
                         <property name="hexpand">False</property>
                         <property name="vexpand">False</property>
@@ -205,6 +206,8 @@
                           <object class="HdyClamp" id="results_clamp">
                             <property name="visible">True</property>
                             <property name="can-focus">False</property>
+                            <property name="maximum-size">882</property>
+                            <property name="tightening-threshold">882</property>
                             <child>
                               <object class="GtkFlowBox" id="results_list">
                                 <property name="can-focus">True</property>
@@ -235,6 +238,8 @@
                           <object class="HdyClamp" id="playlist_clamp">
                             <property name="visible">True</property>
                             <property name="can-focus">False</property>
+                            <property name="maximum-size">882</property>
+                            <property name="tightening-threshold">882</property>
                             <child>
                               <object class="GtkFlowBox" id="playlist_list">
                                 <property name="can-focus">True</property>
@@ -305,6 +310,30 @@
                         <property name="expand">False</property>
                         <property name="fill">True</property>
                         <property name="position">2</property>
+                      </packing>
+                    </child>
+                    <child>
+                      <object class="GtkButton" id="error_action_button">
+                        <property name="visible">True</property>
+                        <property name="can-focus">True</property>
+                        <property name="margin-top">12</property>
+                        <property name="tooltip-text" translatable="yes">Reload</property>
+                        <property name="valign">center</property>
+                        <signal name="clicked" handler="reload_instances" swapped="no"/>
+                        <child>
+                          <object class="GtkImage" id="error_action_icon">
+                            <property name="visible">True</property>
+                            <property name="can-focus">False</property>
+                            <property name="icon-name">view-refresh-symbolic</property>
+                            <property name="icon_size">1</property>
+                            <style>
+                              <class name="image-button"/>
+                            </style>
+                          </object>
+                        </child>
+                      </object>
+                      <packing>
+                        <property name="position">3</property>
                       </packing>
                     </child>
                   </object>

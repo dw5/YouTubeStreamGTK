@@ -47,7 +47,7 @@ class ResultsBox(Gtk.Box):
     audio_dl_image = Gtk.Template.Child()
     video_dl = Gtk.Template.Child()
     video_dl_image = Gtk.Template.Child()
-    speed = Gtk.Template.Child()
+
     fullscreen = Gtk.Template.Child()
     unfullscreen = Gtk.Template.Child()
 
@@ -67,21 +67,39 @@ class ResultsBox(Gtk.Box):
         # listen for motion on the player box for controls show/hide
         self.event_box.add_events(Gdk.EventMask.POINTER_MOTION_MASK)
 
-        # do ratio calculation from width (16:9 or 1.77)
-        self.video_box_width = int(self.app_window.app_orig_width - self.window_to_player_box_margin)
-        self.video_box_height = int(self.video_box_width / 1.77)
-
-        self.player_box.set_size_request(self.video_box_width, self.video_box_height)
-        self.poster_image.set_size_request(self.video_box_width, self.video_box_height)
-
         # init gstreamer player
         self.player = Gst.ElementFactory.make("playbin", "player")
         self.sink = Gst.ElementFactory.make("gtksink")
 
         self.video_widget = self.sink.get_property("widget")
-        self.video_widget.set_size_request(self.video_box_width, self.video_box_height)
 
         self.player_box.add(self.video_widget)
+
+        self.set_player_box_size()
+
+    def set_player_box_size(self):
+        # setup player box sizing based on app window (re)size
+        size = self.app_window.get_size()
+
+        self.app_last_width = size.width
+        self.app_last_height = size.height
+
+        # do ratio calculation from width (16:9 or 1.77)
+        self.video_box_width = self.app_window.video_size_active
+        self.video_box_height = int(self.video_box_width / 1.77)
+
+        self.player_box.set_size_request(self.video_box_width, self.video_box_height)
+        self.poster_image.set_size_request(self.video_box_width, self.video_box_height)
+        self.video_widget.set_size_request(self.video_box_width, self.video_box_height)
+
+        # this is a HdyClamp to tighten the box around the dynamic
+        # player box size (determined by window size at time of search)
+        # not allowing long text titles to expand the results window
+        results_width = int(self.app_window.video_size_active + self.window_to_player_box_margin)
+        self.app_window.results_clamp.set_property('maximum-size', results_width)
+        self.app_window.results_clamp.set_property('tightening-threshold', results_width)
+        self.app_window.playlist_clamp.set_property('maximum-size', results_width)
+        self.app_window.playlist_clamp.set_property('tightening-threshold', results_width)
 
     def get_readable_seconds(self, seconds):
         m, s = divmod(seconds, 60)
@@ -106,10 +124,8 @@ class ResultsBox(Gtk.Box):
                 None)                # user_data
 
     def on_stream_load(self, source, async_res, context):
-        pixbuf = GdkPixbuf.Pixbuf.new_from_stream_finish(async_res)
-
-        self.poster_image.clear()
-        self.poster_image.set_from_pixbuf(pixbuf)
+        self.pixbuf = GdkPixbuf.Pixbuf.new_from_stream_finish(async_res)
+        self.poster_image.set_from_pixbuf(self.pixbuf)
 
     def stream_at_scale_async(self, poster_file):
         stream = poster_file.read_async(0, None,
@@ -195,7 +211,7 @@ class ResultsBox(Gtk.Box):
 
                 if int(position / Gst.SECOND) >= int(duration / Gst.SECOND):
                     GLib.timeout_add(500, self.null_out_player)
-                    GLib.timeout_add(600, self.app_window.autoplay_next)
+                    GLib.timeout_add(700, self.app_window.next_playback_action)
 
                 try:
                     # block seek slider function so it doesn't loop itself
@@ -336,6 +352,11 @@ class ResultsBox(Gtk.Box):
         app_volume = self.app_window.menu.volume.get_value() / 100
         self.player.set_property("volume", app_volume)
 
+        # grab the speed from menu
+        speed = self.app_window.menu.speed.get_value()
+        # something like this sudo code:
+        # self.player.set_property("speed", speed)
+
         # update slider to track video time in slider
         GLib.timeout_add_seconds(1, self.update_slider)
 
@@ -360,9 +381,19 @@ class ResultsBox(Gtk.Box):
         self.app_window.is_playing = False
         self.app_window.uninhibit_app()
 
-    @Gtk.Template.Callback()
-    def speed_button(self, button):
-        print("speed_button")
+    def resize_results(self):
+        self.poster_image.clear()
+
+        # resize the player boxes to the new window size
+        self.set_player_box_size()
+
+        # check if there is an original pixbuf to resize
+        if hasattr(self, "pixbuf"):
+            resize_pixbuf = GdkPixbuf.Pixbuf.scale_simple(self.pixbuf,
+                                self.video_box_width, self.video_box_height,
+                                GdkPixbuf.InterpType.BILINEAR)
+
+            self.poster_image.set_from_pixbuf(resize_pixbuf)
 
     def resize_player(self, width, height):
         self.poster_image.set_size_request(width, height)
@@ -411,11 +442,8 @@ class ResultsBox(Gtk.Box):
         results_context.remove_class("fullscreen")
         results_context.add_class("results")
 
-        set_width = int(self.app_window.app_orig_width - self.window_to_player_box_margin)
-        set_height = int(set_width / 1.77)
-
-        self.resize_player(set_width, set_height)
-        self.app_window.resize(self.app_window.app_orig_width, self.app_window.app_orig_height)
+        self.resize_player(self.video_box_width, self.video_box_height)
+        self.app_window.resize(self.app_last_width, self.app_last_height)
 
         scroller = self.app_window.scroller
         scroller.set_policy(Gtk.PolicyType.NEVER, Gtk.PolicyType.AUTOMATIC)

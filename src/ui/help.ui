@@ -24,6 +24,20 @@
                 <property name="accelerator">Down</property>
               </object>
             </child>
+            <child>
+              <object class="GtkShortcutsShortcut">
+                <property name="visible">True</property>
+                <property name="title" translatable="yes" context="shortcut window">Speed Slower</property>
+                <property name="accelerator">bracketleft</property>
+              </object>
+            </child>
+            <child>
+              <object class="GtkShortcutsShortcut">
+                <property name="visible">True</property>
+                <property name="title" translatable="yes" context="shortcut window">Speed Faster</property>
+                <property name="accelerator">bracketright</property>
+              </object>
+            </child>
           </object>
         </child>
         <child>

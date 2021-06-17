@@ -26,9 +26,11 @@ from .help import Help
 class Menu(Gtk.PopoverMenu):
     __gtype_name__ = 'Menu'
 
-    autoplay_toggle = Gtk.Template.Child()
     volume = Gtk.Template.Child()
     volume_icon = Gtk.Template.Child()
+    speed = Gtk.Template.Child()
+
+    mode_switcher = Gtk.Template.Child()
 
     def __init__(self, app_window, **kwargs):
         super().__init__(**kwargs)
@@ -38,6 +40,10 @@ class Menu(Gtk.PopoverMenu):
     @Gtk.Template.Callback()
     def volume_change(self, event):
         self.volume_setting(event.get_value())
+
+    @Gtk.Template.Callback()
+    def speed_change(self, event):
+        self.speed_setting(event.get_value())
 
     @Gtk.Template.Callback()
     def mute_toggle(self, toggle_button):
@@ -55,6 +61,13 @@ class Menu(Gtk.PopoverMenu):
         children = list.get_children()
         for child in children:
             child.get_child().player.set_property("volume", volume_decimal)
+
+    def speed_setting(self, speed_value):
+        list = self.app_window.get_scroller_list()
+        children = list.get_children()
+#        for child in children:
+#            # something like this sudo code:
+#            child.get_child().player.set_property("speed", speed_value)
 
     @Gtk.Template.Callback()
     def show_about(self, data):
