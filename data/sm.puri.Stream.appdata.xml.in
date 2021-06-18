@@ -24,9 +24,9 @@
 		</screenshot>
 	</screenshots>
 	<releases>
-		<release version="0.1.1" date="2021-06-18">
+		<release version="0.1.2" date="2021-06-18">
 			<description>
-				<p>Adding adaptive resizing and playback modes.</p>
+				<p>Adding adaptive resizing, playback modes, and fixing screenshots.</p>
 			</description>
 		</release>
 	</releases>
