@@ -24,9 +24,10 @@
 		</screenshot>
 	</screenshots>
 	<releases>
-		<release version="0.1.2" date="2021-06-18">
+		<release version="0.1.3" date="2021-06-18">
 			<description>
 				<p>Adding adaptive resizing, playback modes, and fixing screenshots.</p>
+				<p>Changing .appdata.xml to .metainfo.xml</p>
 			</description>
 		</release>
 	</releases>
