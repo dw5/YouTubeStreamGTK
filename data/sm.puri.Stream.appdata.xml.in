@@ -14,16 +14,19 @@
 	</description>
 	<screenshots>
 		<screenshot type="default">
-			<image>https://source.puri.sm/todd/Stream/-/blob/master/data/screenshots/sm.puri.Stream-mobile-search-2021-04-21.png</image>
+			<image>https://source.puri.sm/todd/Stream/-/raw/master/data/screenshots/sm.puri.Stream.1.png</image>
 		</screenshot>
 		<screenshot type="default">
-			<image>https://source.puri.sm/todd/Stream/-/blob/master/data/screenshots/sm.puri.Stream-search-2021-04-21.png</image>
+			<image>https://source.puri.sm/todd/Stream/-/raw/master/data/screenshots/sm.puri.Stream.2.png</image>
+		</screenshot>
+		<screenshot type="default">
+			<image>https://source.puri.sm/todd/Stream/-/raw/master/data/screenshots/sm.puri.Stream.3.png</image>
 		</screenshot>
 	</screenshots>
 	<releases>
-		<release version="0.1.0" date="2021-04-21">
+		<release version="0.1.1" date="2021-06-18">
 			<description>
-				<p>Initial release.</p>
+				<p>Adding adaptive resizing and playback modes.</p>
 			</description>
 		</release>
 	</releases>
