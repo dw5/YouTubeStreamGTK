@@ -71,8 +71,7 @@ class Menu(Gtk.PopoverMenu):
 
     @Gtk.Template.Callback()
     def show_about(self, data):
-        about = About()
-        about.props.transient_for = self.app_window
+        about = About(transient_for=self.app_window)
         about.present()
 
     @Gtk.Template.Callback()
