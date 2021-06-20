@@ -1,0 +1,97 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Generated with glade 3.38.2 -->
+<interface>
+  <requires lib="gtk+" version="3.20"/>
+  <template class="HistoryBox" parent="GtkBox">
+    <property name="visible">True</property>
+    <property name="can-focus">True</property>
+    <property name="valign">start</property>
+    <property name="hexpand">True</property>
+    <property name="baseline-position">top</property>
+    <property name="width-request">320</property>
+    <child>
+      <object class="GtkEventBox">
+        <property name="visible">True</property>
+        <property name="can-focus">False</property>
+        <signal name="button-press-event" handler="history_search" swapped="no"/>
+        <child>
+          <object class="GtkLabel" id="search_term">
+            <property name="visible">True</property>
+            <property name="can-focus">True</property>
+            <property name="halign">start</property>
+            <property name="margin-start">6</property>
+            <property name="margin-end">6</property>
+            <property name="hexpand">True</property>
+            <property name="label">...</property>
+            <property name="ellipsize">end</property>
+            <attributes>
+              <attribute name="weight" value="bold"/>
+            </attributes>
+          </object>
+        </child>
+      </object>
+      <packing>
+        <property name="expand">False</property>
+        <property name="fill">True</property>
+        <property name="position">0</property>
+      </packing>
+    </child>
+    <child>
+      <object class="GtkLabel" id="history_id">
+        <property name="sensitive">False</property>
+        <property name="can-focus">False</property>
+        <property name="label" translatable="yes">id</property>
+      </object>
+      <packing>
+        <property name="expand">False</property>
+        <property name="fill">True</property>
+        <property name="position">1</property>
+      </packing>
+    </child>
+    <child>
+      <object class="GtkLabel" id="date_time">
+        <property name="visible">False</property>
+        <property name="can-focus">True</property>
+        <property name="halign">end</property>
+        <property name="margin-start">6</property>
+        <property name="margin-end">6</property>
+        <property name="label" translatable="yes">...</property>
+      </object>
+      <packing>
+        <property name="expand">False</property>
+        <property name="fill">True</property>
+        <property name="position">2</property>
+      </packing>
+    </child>
+    <child>
+      <object class="GtkButton" id="history_row_delete_button">
+        <property name="visible">True</property>
+        <property name="can-focus">False</property>
+        <property name="receives-default">False</property>
+        <property name="tooltip-text" translatable="yes">Delete this search history item</property>
+        <property name="opacity">0.80</property>
+        <property name="halign">center</property>
+        <property name="valign">center</property>
+        <signal name="clicked" handler="history_row_delete" swapped="no"/>
+        <child>
+          <object class="GtkImage">
+            <property name="visible">True</property>
+            <property name="can-focus">False</property>
+            <property name="icon-name">edit-delete-symbolic</property>
+          </object>
+        </child>
+        <style>
+          <class name="rounded-button"/>
+        </style>
+      </object>
+      <packing>
+        <property name="expand">False</property>
+        <property name="fill">True</property>
+        <property name="position">3</property>
+      </packing>
+    </child>
+    <style>
+      <class name="history"/>
+    </style>
+  </template>
+</interface>

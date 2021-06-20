@@ -24,6 +24,7 @@ from gi.repository import Gdk, Gtk, Handy
 Handy.init()
 
 from .menu import Menu
+from .history import HistoryBox
 from .results import ResultsBox
 from .instances import Instances
 
@@ -39,6 +40,7 @@ class StreamWindow(Handy.ApplicationWindow):
 
     search_bar_toggle = Gtk.Template.Child()
     search_bar = Gtk.Template.Child()
+    search_entry_box = Gtk.Template.Child()
 
     back_button = Gtk.Template.Child()
     menu_button = Gtk.Template.Child()
@@ -49,6 +51,10 @@ class StreamWindow(Handy.ApplicationWindow):
     error_heading = Gtk.Template.Child()
     error_text = Gtk.Template.Child()
     error_action_button = Gtk.Template.Child()
+
+    history_box = Gtk.Template.Child()
+    history_list = Gtk.Template.Child()
+    history_toggle_button = Gtk.Template.Child()
 
     # lists stack holds both the scroller ScrollWindow
     # and the playlist_scroller ScrollWindow
@@ -96,6 +102,8 @@ class StreamWindow(Handy.ApplicationWindow):
         styleContext.add_provider_for_screen(
             Gdk.Screen.get_default(), provider,
             Gtk.STYLE_PROVIDER_PRIORITY_APPLICATION)
+
+        self.show_history_if_exists()
 
     @Gtk.Template.Callback()
     def search_toggle(self, toggle_button):
@@ -147,6 +155,8 @@ class StreamWindow(Handy.ApplicationWindow):
         self.status_page.set_visible(False)
 
         self.hide_error_box()
+        self.hide_history_box()
+
         self.lists_stack.set_visible(False)
 
         self.search_query = search_box.get_text()
@@ -163,6 +173,47 @@ class StreamWindow(Handy.ApplicationWindow):
     def toggle_status_spinner(self, toggle):
         self.status_spinner.set_visible(toggle)
         self.status_icon.set_visible(not toggle)
+
+    @Gtk.Template.Callback()
+    def history_toggle(self, toggle_button):
+        if toggle_button.get_active():
+            self.show_history_if_exists()
+        else:
+            self.hide_history_box()
+
+    def hide_history_box(self):
+        self.history_toggle_button.set_active(False)
+        self.history_box.set_visible(False)
+
+    def show_history_if_exists(self):
+        # if there is some history file
+        # use it in a for loop
+        self.hide_error_box()
+        self.lists_stack.set_visible(False)
+        self.status_page.set_visible(False)
+        self.clear_playlist(0, 0, None)
+        self.history_box.set_visible(True)
+        self.history_toggle_button.set_active(True)
+
+
+        self.add_history_row("1", "test", "2021-06-19 15:34")
+        self.add_history_row("2", "this is a really long test I did yesterday or the day before", "2021-06-19 15:33")
+
+
+    def add_history_row(self, history_id, label, datetime):
+        history_box = HistoryBox(self)
+        self.history_list.add(history_box)
+        history_box.history_id.set_label(history_id)
+        history_box.search_term.set_label(label)
+        history_box.search_term.set_tooltip_text(label)
+        history_box.date_time.set_label(datetime)
+
+    @Gtk.Template.Callback()
+    def history_clear_all(self, button):
+        children = self.history_list.get_children()
+        for child in children:
+            # delete it from the history file too
+            child.destroy()
 
     def add_result_meta(self, meta):
         # stores an array of results for playlists and videos

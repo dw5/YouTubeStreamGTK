@@ -149,7 +149,9 @@ class ResultsBox(Gtk.Box):
         self.video_duration = 0
 
         self.title.set_label(self.meta_title)
+        self.title.set_tooltip_text(self.meta_title)
         self.channel.set_label(meta_channel)
+        self.channel.set_tooltip_text(meta_channel)
 
         poster_file = Gio.File.new_for_uri(poster_uri)
         self.stream_at_scale_async(poster_file)

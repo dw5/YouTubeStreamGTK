@@ -10,6 +10,16 @@
   background-color: @theme_base_color;
 }
 
+.history {
+  border: 1px solid @borders;
+  margin: 0px;
+  padding: 6px;
+  border-radius: 8px;
+  border-bottom-width: 1px;
+  transition: 250ms all linear;
+  background-color: @theme_base_color;
+}
+
 .fullscreen {
   border: 0px solid green;
   margin: 0px;

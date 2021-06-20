@@ -19,8 +19,9 @@ import gi
 gi.require_version('Gtk', '3.0')
 from gi.repository import Gtk
 
-from .about import About
+from .preferences import Preferences
 from .help import Help
+from .about import About
 
 @Gtk.Template(resource_path="/sm/puri/Stream/ui/menu.ui")
 class Menu(Gtk.PopoverMenu):
@@ -70,12 +71,16 @@ class Menu(Gtk.PopoverMenu):
 #            child.get_child().player.set_property("speed", speed_value)
 
     @Gtk.Template.Callback()
-    def show_about(self, data):
-        about = About(transient_for=self.app_window)
-        about.present()
+    def show_preferences(self, data):
+        preferences = Preferences(transient_for = self.app_window)
+        preferences.present()
 
     @Gtk.Template.Callback()
     def show_help(self, data):
-        help = Help()
-        help.props.transient_for = self.app_window
+        help = Help(transient_for = self.app_window)
         help.present()
+
+    @Gtk.Template.Callback()
+    def show_about(self, data):
+        about = About(transient_for = self.app_window)
+        about.present()

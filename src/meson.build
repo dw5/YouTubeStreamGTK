@@ -33,8 +33,10 @@ stream_sources = [
   'about.py',
   'window.py',
   'search.py',
+  'history.py',
   'results.py',
   'instances.py',
+  'preferences.py',
 ]
 
 install_data(stream_sources, install_dir: moduledir)

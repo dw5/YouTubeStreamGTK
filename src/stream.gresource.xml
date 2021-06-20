@@ -5,8 +5,10 @@
     <file>ui/menu.ui</file>
     <file>ui/about.ui</file>
     <file>ui/window.ui</file>
+    <file>ui/history.ui</file>
     <file>ui/results.ui</file>
     <file>ui/stream.css</file>
+    <file>ui/preferences.ui</file>
     <file>ui/video-placeholder-332x186.png</file>
   </gresource>
 </gresources>
