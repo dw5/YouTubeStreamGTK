@@ -24,7 +24,7 @@
             <property name="title">Stream</property>
             <property name="show-close-button">True</property>
             <child>
-              <object class="GtkStack">
+              <object class="GtkStack" id="search_back_stack">
                 <property name="visible">True</property>
                 <property name="can-focus">False</property>
                 <child>
@@ -48,12 +48,12 @@
                     </style>
                   </object>
                   <packing>
-                    <property name="position">1</property>
+                    <property name="name">search_bar_toggle</property>
                   </packing>
                 </child>
                 <child>
                   <object class="GtkButton" id="back_button">
-                    <property name="visible">False</property>
+                    <property name="visible">True</property>
                     <property name="can-focus">True</property>
                     <property name="tooltip-text" translatable="yes">Back</property>
                     <property name="valign">center</property>
@@ -71,7 +71,7 @@
                     </child>
                   </object>
                   <packing>
-                    <property name="position">1</property>
+                    <property name="name">back_button</property>
                   </packing>
                 </child>
               </object>
@@ -119,19 +119,19 @@
                     </style>
                   </object>
                   <packing>
-                    <property name="position">2</property>
+                    <property name="name">status_icon</property>
                   </packing>
                 </child>
                 <child>
                   <object class="GtkSpinner" id="status_spinner">
-                    <property name="visible">False</property>
+                    <property name="visible">True</property>
                     <property name="can-focus">True</property>
                     <property name="halign">center</property>
                     <property name="valign">center</property>
                     <property name="active">True</property>
                   </object>
                   <packing>
-                    <property name="position">1</property>
+                    <property name="name">status_spinner</property>
                   </packing>
                 </child>
               </object>
@@ -202,7 +202,7 @@
             <property name="visible">True</property>
             <property name="can-focus">False</property>
             <child>
-              <object class="GtkStack" id="stack">
+              <object class="GtkStack" id="main_stack">
                 <property name="visible">True</property>
                 <property name="can-focus">False</property>
                 <property name="hexpand">False</property>
@@ -216,12 +216,12 @@
                     <property name="description" translatable="yes">Use the &lt;b&gt;Search&lt;/b&gt; button to find videos online.</property>
                   </object>
                   <packing>
-                    <property name="position">2</property>
+                    <property name="name">status_page</property>
                   </packing>
                 </child>
                 <child>
                   <object class="GtkStack" id="lists_stack">
-                    <property name="visible">False</property>
+                    <property name="visible">True</property>
                     <property name="can-focus">False</property>
                     <child>
                       <object class="GtkScrolledWindow" id="scroller">
@@ -255,10 +255,13 @@
                           </object>
                         </child>
                       </object>
+                      <packing>
+                        <property name="name">scroller</property>
+                      </packing>
                     </child>
                     <child>
                       <object class="GtkScrolledWindow" id="playlist_scroller">
-                        <property name="visible">False</property>
+                        <property name="visible">True</property>
                         <property name="can-focus">True</property>
                         <property name="hexpand">False</property>
                         <property name="vexpand">False</property>
@@ -287,11 +290,18 @@
                           </object>
                         </child>
                       </object>
+                      <packing>
+                        <property name="name">playlist_scroller</property>
+                      </packing>
                     </child>
                   </object>
+                  <packing>
+                    <property name="name">lists_stack</property>
+                  </packing>
                 </child>
                 <child>
                   <object class="GtkScrolledWindow" id="history_box">
+                    <property name="name">history_box</property>
                     <property name="visible">True</property>
                     <property name="can-focus">True</property>
                     <property name="hexpand">False</property>
@@ -404,10 +414,13 @@
                       </object>
                     </child>
                   </object>
+                  <packing>
+                    <property name="name">history_box</property>
+                  </packing>
                 </child>
                 <child>
                   <object class="GtkBox" id="error_box">
-                    <property name="visible">False</property>
+                    <property name="visible">True</property>
                     <property name="can-focus">False</property>
                     <property name="halign">center</property>
                     <property name="valign">center</property>
@@ -484,7 +497,7 @@
                     </child>
                   </object>
                   <packing>
-                    <property name="position">1</property>
+                    <property name="name">error_box</property>
                   </packing>
                 </child>
               </object>

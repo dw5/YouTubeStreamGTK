@@ -35,8 +35,8 @@ class ResultsBox(Gtk.Box):
     poster_image = Gtk.Template.Child()
     controls_box = Gtk.Template.Child()
     event_box = Gtk.Template.Child()
-    play = Gtk.Template.Child()
-    pause = Gtk.Template.Child()
+    play_pause_stack = Gtk.Template.Child()
+
     slider = Gtk.Template.Child()
     time_viewed = Gtk.Template.Child()
     time_remaining = Gtk.Template.Child()
@@ -336,8 +336,7 @@ class ResultsBox(Gtk.Box):
         # loop through all child results pausing them
         self.app_window.pause_all(self)
 
-        self.play.set_visible(False)
-        self.pause.set_visible(True)
+        self.play_pause_stack.set_visible_child_name("pause")
         self.app_window.is_playing = True
         self.app_window.inhibit_app()
         self.player.set_state(Gst.State.PLAYING)
@@ -378,8 +377,7 @@ class ResultsBox(Gtk.Box):
         self.player.set_state(Gst.State.PAUSED)
 
     def inactivate_player(self):
-        self.play.set_visible(True)
-        self.pause.set_visible(False)
+        self.play_pause_stack.set_visible_child_name("play")
         self.app_window.is_playing = False
         self.app_window.uninhibit_app()
 
@@ -437,7 +435,7 @@ class ResultsBox(Gtk.Box):
         self.app_window.header_bar.set_visible(True)
         self.details.set_visible(True)
 
-        if not self.app_window.playlist_scroller.get_visible():
+        if self.app_window.lists_stack.get_visible_child_name() == "scroller":
             self.app_window.search_bar.set_visible(self.app_window.search_bar_toggle.get_active())
 
         results_context = self.get_style_context()
@@ -503,13 +501,12 @@ class ResultsBox(Gtk.Box):
             self.app_window.search_bar.set_visible(False)
             self.app_window.header_bar.set_property('title', "Playlist")
 
-            self.app_window.back_button.set_visible(True)
-            self.app_window.scroller.set_visible(False)
-            self.app_window.playlist_scroller.set_visible(True)
+            self.app_window.search_back_stack.set_visible_child_name("back_button")
+
+            self.app_window.lists_stack.set_visible_child_name("playlist_scroller")
 
             self.app_window.playlist_search = Search(app_window = self.app_window,
                 toggle_status_spinner = self.app_window.toggle_status_spinner,
-                scroller = self.app_window.playlist_scroller,
                 add_result_meta = self.app_window.add_playlist_result_meta)
             self.app_window.playlist_search.do_playlist(playlist_id = self.app_window.playlist_id, page = self.app_window.page_playlist)
 

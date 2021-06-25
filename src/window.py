@@ -42,12 +42,14 @@ class StreamWindow(Handy.ApplicationWindow):
     search_bar = Gtk.Template.Child()
     search_entry_box = Gtk.Template.Child()
 
-    back_button = Gtk.Template.Child()
+    search_back_stack = Gtk.Template.Child()
     menu_button = Gtk.Template.Child()
 
+    main_stack = Gtk.Template.Child()
+    status_stack = Gtk.Template.Child()
     status_page = Gtk.Template.Child()
     status_spinner = Gtk.Template.Child()
-    error_box = Gtk.Template.Child()
+
     error_heading = Gtk.Template.Child()
     error_text = Gtk.Template.Child()
     error_action_button = Gtk.Template.Child()
@@ -64,7 +66,6 @@ class StreamWindow(Handy.ApplicationWindow):
     results_list = Gtk.Template.Child()
     results_clamp = Gtk.Template.Child()
 
-    playlist_scroller = Gtk.Template.Child()
     playlist_list = Gtk.Template.Child()
     playlist_clamp = Gtk.Template.Child()
 
@@ -103,7 +104,8 @@ class StreamWindow(Handy.ApplicationWindow):
             Gdk.Screen.get_default(), provider,
             Gtk.STYLE_PROVIDER_PRIORITY_APPLICATION)
 
-        self.show_history_if_exists()
+#        # this will check if history exists, then show it instead of Status Page
+#        self.show_history_if_exists()
 
     @Gtk.Template.Callback()
     def search_toggle(self, toggle_button):
@@ -119,9 +121,8 @@ class StreamWindow(Handy.ApplicationWindow):
         self.search_bar.set_visible(True)
         self.header_bar.set_property('title', "Stream")
 
-        self.back_button.set_visible(False)
-        self.scroller.set_visible(True)
-        self.playlist_scroller.set_visible(False)
+        self.search_back_stack.set_visible_child_name("search_toggle_button")
+        self.lists_stack.set_visible_child_name("scroller")
 
     # this is called from code and from the ui XML upon
     # delete-text button press in search-entry
@@ -135,9 +136,8 @@ class StreamWindow(Handy.ApplicationWindow):
             for child in children:
                 child.destroy()
 
-            self.hide_error_box()
-            self.lists_stack.set_visible(False)
-            self.status_page.set_visible(True)
+            self.clear_error_box()
+            self.main_stack.set_visible_child_name("status_page")
             self.clear_playlist(0, 0, None)
 
     def clear_playlist(self, start_pos, end_pos, data):
@@ -147,57 +147,52 @@ class StreamWindow(Handy.ApplicationWindow):
         for child in children:
             child.destroy()
 
-        self.playlist_scroller.set_visible(False)
-
     @Gtk.Template.Callback()
     def search_entry(self, search_box):
         self.clear_results(0, 0, None)
-        self.status_page.set_visible(False)
-
-        self.hide_error_box()
-        self.hide_history_box()
-
-        self.lists_stack.set_visible(False)
+        self.clear_error_box()
+        self.history_toggle_button.set_active(False)
+        self.main_stack.set_visible_child_name("lists_stack")
 
         self.search_query = search_box.get_text()
 
         if not self.strong_instances:
+            self.show_error_box("Service Failure",
+                                "No strong instances found to do search against.")
             self.instances.get_strong_instances()
         else:
             self.search = Search(app_window = self,
                 toggle_status_spinner = self.toggle_status_spinner,
-                lists_stack = self.lists_stack,
                 add_result_meta = self.add_result_meta)
             self.search.do_search(query = self.search_query, page = self.page_results)
 
     def toggle_status_spinner(self, toggle):
-        self.status_spinner.set_visible(toggle)
-        self.status_icon.set_visible(not toggle)
+        if toggle:
+            self.status_stack.set_visible_child_name("status_spinner")
+        else:
+            self.status_stack.set_visible_child_name("status_icon")
 
     @Gtk.Template.Callback()
     def history_toggle(self, toggle_button):
         if toggle_button.get_active():
             self.show_history_if_exists()
         else:
-            self.hide_history_box()
-
-    def hide_history_box(self):
-        self.history_toggle_button.set_active(False)
-        self.history_box.set_visible(False)
+            self.main_stack.set_visible_child_name("lists_stack")
 
     def show_history_if_exists(self):
-        # if there is some history file
-        # use it in a for loop
-        self.hide_error_box()
-        self.lists_stack.set_visible(False)
-        self.status_page.set_visible(False)
-        self.clear_playlist(0, 0, None)
-        self.history_box.set_visible(True)
-        self.history_toggle_button.set_active(True)
+        # this is called both from script an toggle button
+        # to avoid recursive calling, the script will
+        # set the toggle active and then return here from
+        # the active toggle to show the stack
+        if self.history_toggle_button.get_active():
+            self.main_stack.set_visible_child_name("history_box")
 
+#            # grab history from user history
+#            self.add_history_row("1", "test", "2021-06-19 15:34")
+#            self.add_history_row("2", "this is a really long test I did yesterday or the day before", "2021-06-19 15:33")
 
-        self.add_history_row("1", "test", "2021-06-19 15:34")
-        self.add_history_row("2", "this is a really long test I did yesterday or the day before", "2021-06-19 15:33")
+        else:
+            self.history_toggle_button.set_active(True)
 
 
     def add_history_row(self, history_id, label, datetime):
@@ -281,7 +276,7 @@ class StreamWindow(Handy.ApplicationWindow):
 #        print("in open primary menu")
 
     def get_scroller_list(self):
-        if self.playlist_scroller.get_visible():
+        if self.lists_stack.get_visible_child_name() == "playlist_scroller":
             return self.playlist_list
         else:
             return self.results_list
@@ -361,20 +356,21 @@ class StreamWindow(Handy.ApplicationWindow):
         if self.inhibit_cookie:
             self.application.uninhibit(self.inhibit_cookie)
 
-    def hide_error_box(self):
-        self.error_box.set_visible(False)
+    def clear_error_box(self):
+        self.main_stack.set_visible_child_name("lists_stack")
         self.error_heading.set_label("Error")
         self.error_text.set_label("...")
 
     def show_error_box(self, heading, text):
         self.toggle_status_spinner(False)
-        self.error_box.set_visible(True)
+        self.main_stack.set_visible_child_name("error_box")
         self.error_heading.set_label(heading)
         self.error_text.set_label(text)
 
     @Gtk.Template.Callback()
     def reload_instances(self, event):
-        self.hide_error_box()
+        self.status_icon.set_property('icon-name', 'content-loading-symbolic')
+        self.clear_error_box()
         self.instances.get_strong_instances()
 
     @Gtk.Template.Callback()

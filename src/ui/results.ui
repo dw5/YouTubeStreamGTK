@@ -221,7 +221,7 @@
                     <property name="halign">center</property>
                     <property name="hexpand">True</property>
                     <child>
-                      <object class="GtkStack">
+                      <object class="GtkStack" id="play_pause_stack">
                         <property name="visible">True</property>
                         <property name="can-focus">False</property>
                         <child>
@@ -253,6 +253,7 @@
                         </child>
                         <child>
                           <object class="GtkButton" id="pause">
+                            <property name="visible">True</property>
                             <property name="can-focus">False</property>
                             <property name="receives-default">False</property>
                             <property name="tooltip-text" translatable="yes">Pause</property>
@@ -275,7 +276,6 @@
                           </object>
                           <packing>
                             <property name="name">pause</property>
-                            <property name="position">1</property>
                           </packing>
                         </child>
                       </object>
