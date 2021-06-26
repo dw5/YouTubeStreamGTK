@@ -49,6 +49,15 @@ class Search:
         message = Soup.Message.new("GET", uri)
         self.session.queue_message(message, self.show_results, page)
 
+    def do_single_video_search(self, video_id):
+        esc_video_id = GLib.uri_escape_string(video_id, None, None)
+        uri = f"{self.this_instance}/api/v1/videos/{video_id}?fields=title,videoId,author,lengthSeconds,videoThumbnails"
+
+        self.session = Soup.Session.new()
+        self.session.set_property("timeout", 5)
+        message = Soup.Message.new("GET", uri)
+        self.session.queue_message(message, self.show_single_result)
+
     def show_results(self, session, results, page):
         if results.status_code != 200:
             if page == 1:
@@ -65,19 +74,35 @@ class Search:
             return False
 
         for meta in self.search_json:
-            if meta['type'] == 'video':
-                if meta['videoId'] not in self.search_video_ids:
-                    video_meta = meta
-                    self.get_poster_url(video_meta, meta)
-                    self.get_video_details(meta)
-            elif meta['type'] == 'playlist':
-                if meta['playlistId'] not in self.search_playlist_ids:
-                    if 'videos' in meta:
-                        first_video_meta = meta['videos'][0]
-                        self.get_poster_url(first_video_meta, meta)
-                        self.append_playlist(meta)
-#            elif meta['type'] == 'channel':
-#                print('channel')
+            self.process_meta(meta)
+
+    def show_single_result(self, session, results):
+        if results.status_code != 200:
+            return False
+
+        try:
+            meta = json.loads(results.response_body.data)
+        except:
+            return False
+
+        if meta:
+            meta['type'] = 'video'
+            self.process_meta(meta)
+
+    def process_meta(self, meta):
+        if meta['type'] == 'video':
+            if meta['videoId'] not in self.search_video_ids:
+                video_meta = meta
+                self.get_poster_url(video_meta, meta)
+                self.get_video_details(meta)
+        elif meta['type'] == 'playlist':
+            if meta['playlistId'] not in self.search_playlist_ids:
+                if 'videos' in meta:
+                    first_video_meta = meta['videos'][0]
+                    self.get_poster_url(first_video_meta, meta)
+                    self.append_playlist(meta)
+#        elif meta['type'] == 'channel':
+#            print('channel')
 
     def do_playlist(self, playlist_id, page):
         self.toggle_status_spinner(True)

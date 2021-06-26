@@ -36,6 +36,6 @@ class HistoryBox(Gtk.Box):
         self.app_window.search_entry(self.app_window.search_entry_box)
 
     @Gtk.Template.Callback()
-    def history_row_delete(self, event):
-        self.app_window.history_json_remove(self.search_term.get_label())
+    def search_history_row_delete(self, event):
+        self.app_window.search_history_json_remove(self.search_term.get_label())
         self.destroy()

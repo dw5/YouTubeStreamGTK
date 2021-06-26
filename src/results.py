@@ -142,6 +142,10 @@ class ResultsBox(Gtk.Box):
                 self.setup_playlist(meta)
 
     def setup_meta(self, meta):
+        if 'videoId' in meta:
+            self.video_id = meta['videoId']
+        elif 'playlistId' in meta:
+            self.playlist_id = meta['playlistId']
         self.meta_title = meta['title']
         meta_channel = meta['author']
         poster_uri = meta['poster_uri']
@@ -341,6 +345,9 @@ class ResultsBox(Gtk.Box):
         self.app_window.inhibit_app()
         self.player.set_state(Gst.State.PLAYING)
 
+        # write the video history
+        self.app_window.write_videos_history(self.video_id)
+
         # hide the poster, show the video
         self.player_box.show_all()
         self.poster_image.hide()
@@ -486,6 +493,10 @@ class ResultsBox(Gtk.Box):
                 self.player.seek_simple(Gst.Format.TIME,
                     Gst.SeekFlags.FLUSH | Gst.SeekFlags.KEY_UNIT, seek)
                 self.app_window.osd_display_show("media-seek-forward-symbolic", "+10s")
+
+    def videos_history_row_delete(self, event):
+        self.app_window.videos_history_json_remove(self.video_id)
+        self.destroy()
 
     def poll_mouse(self):
         now_is = int(GLib.get_current_time())

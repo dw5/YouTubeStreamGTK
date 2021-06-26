@@ -32,6 +32,7 @@ class Menu(Gtk.PopoverMenu):
     mute_button = Gtk.Template.Child()
     speed = Gtk.Template.Child()
 
+    incognito_mode = Gtk.Template.Child()
     mode_switcher = Gtk.Template.Child()
 
     def __init__(self, app_window, **kwargs):

@@ -130,4 +130,5 @@ class Instances:
             return False
 
         self.app_window.strong_instances.append(uri)
+        self.app_window.strong_instance_found()
         self.app_window.status_icon.set_property('icon-name', 'object-select-symbolic')

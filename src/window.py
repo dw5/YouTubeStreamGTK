@@ -62,11 +62,14 @@ class StreamWindow(Handy.ApplicationWindow):
     error_action_button = Gtk.Template.Child()
 
     history_box = Gtk.Template.Child()
-    history_list = Gtk.Template.Child()
     history_toggle_button = Gtk.Template.Child()
-    history_file = f"{user_data_dir}/history.json"
-    history_json = { 'history': [] }
 
+    history_file = f"{user_data_dir}/history.json"
+    history_json = { 'search_history': [],
+                     'videos_history': [] }
+
+    search_history_list = Gtk.Template.Child()
+    videos_history_list = Gtk.Template.Child()
 
     # lists stack holds both the scroller ScrollWindow
     # and the playlist_scroller ScrollWindow
@@ -97,9 +100,11 @@ class StreamWindow(Handy.ApplicationWindow):
 
         self.is_playing = False
         self.is_fullscreen = False
+        self.history_rendered = False
         self.inhibit_cookie = 0
         self.strong_instances = []
         self.results_meta = []
+        self.videos_history_results_meta = []
         self.playlist_results_meta = []
         self.instances = Instances(app_window = self)
         self.instances.get_strong_instances()
@@ -113,6 +118,10 @@ class StreamWindow(Handy.ApplicationWindow):
         styleContext.add_provider_for_screen(
             Gdk.Screen.get_default(), provider,
             Gtk.STYLE_PROVIDER_PRIORITY_APPLICATION)
+
+    def strong_instance_found(self):
+        if self.history_rendered:
+            return False
 
         # Check if history exists, then show it instead of Status Page
         self.show_history_if_exists()
@@ -166,8 +175,8 @@ class StreamWindow(Handy.ApplicationWindow):
 
         self.search_query = search_box.get_text()
 
-        # write to history
-        self.write_history(self.search_query)
+        # write search to history
+        self.write_search_history(self.search_query)
 
         if not self.strong_instances:
             self.show_error_box("Service Failure",
@@ -193,6 +202,9 @@ class StreamWindow(Handy.ApplicationWindow):
             self.main_stack.set_visible_child_name("lists_stack")
 
     def show_history_if_exists(self):
+        if not self.strong_instances:
+            return False
+
         # this is called both from script an toggle button
         # to avoid recursive calling, the script will
         # set the toggle active and then return here from
@@ -207,30 +219,54 @@ class StreamWindow(Handy.ApplicationWindow):
             except:
                 self.main_stack.set_visible_child_name("status_page")
 
-            for history_box in self.history_list:
+            for history_box in self.search_history_list:
                 history_box.destroy()
 
-            # show reverse sorted [::-1] history
-            for history in self.history_json['history'][::-1]:
-                self.add_history_row(history)
+            for history_box in self.videos_history_list:
+                history_box.destroy()
 
+            # show reverse sorted history of last 10 searches
+            for history in list(reversed(self.history_json['search_history'][-10::])):
+                self.add_search_history_row(history)
+
+            # show reverse sorted history of last 10 videos
+            for history in list(reversed(self.history_json['videos_history'][-10::])):
+                self.add_videos_history_row(history)
+
+            self.history_rendered = True
         else:
             self.history_toggle_button.set_active(True)
 
-    def add_history_row(self, query):
+    def add_search_history_row(self, history_value):
         history_box = HistoryBox(self)
-        self.history_list.add(history_box)
-        history_box.search_term.set_label(query)
-        history_box.search_term.set_tooltip_text(query)
+        self.search_history_list.add(history_box)
+        history_box.search_term.set_label(history_value)
+        history_box.search_term.set_tooltip_text(history_value)
+
+    def add_videos_history_row(self, history_value):
+        # grab the meta from search
+        single_video_search = Search(app_window = self,
+            toggle_status_spinner = self.toggle_status_spinner,
+            add_result_meta = self.add_videos_history_result_meta)
+        single_video_search.do_single_video_search(video_id = history_value)
 
     @Gtk.Template.Callback()
-    def history_clear_all(self, button):
-        children = self.history_list.get_children()
+    def search_history_clear_all(self, button):
+        children = self.search_history_list.get_children()
         for child in children:
             if child:
                 history_child = child.get_child()
                 if history_child:
-                    history_child.history_row_delete(None)
+                    history_child.search_history_row_delete(None)
+
+    @Gtk.Template.Callback()
+    def videos_history_clear_all(self, button):
+        children = self.videos_history_list.get_children()
+        for child in children:
+            if child:
+                history_child = child.get_child()
+                if history_child:
+                    history_child.videos_history_row_delete(None)
 
     def get_history_json(self):
         try:
@@ -248,21 +284,35 @@ class StreamWindow(Handy.ApplicationWindow):
         except:
             return False
 
-    def history_json_remove(self, query):
+    def search_history_json_remove(self, history_value):
         if self.get_history_json():
             # remove old (matching query) if exists
-            if query in self.history_json['history']:
-                self.history_json['history'].remove(query)
+            if history_value in self.history_json['search_history']:
+                self.history_json['search_history'].remove(history_value)
 
         self.write_history_json()
 
-    def write_history(self, query):
-        self.history_json_remove(query)
-
-        # append new query
-        self.history_json['history'].append(query)
+    def videos_history_json_remove(self, history_value):
+        if self.get_history_json():
+            # remove old (matching query) if exists
+            if history_value in self.history_json['videos_history']:
+                self.history_json['videos_history'].remove(history_value)
 
         self.write_history_json()
+
+    def write_search_history(self, history_value):
+        if not self.menu.incognito_mode.get_active():
+            self.search_history_json_remove(history_value)
+            # append new history_value
+            self.history_json['search_history'].append(history_value)
+            self.write_history_json()
+
+    def write_videos_history(self, history_value):
+        if not self.menu.incognito_mode.get_active():
+            self.videos_history_json_remove(history_value)
+            # append new history_value
+            self.history_json['videos_history'].append(history_value)
+            self.write_history_json()
 
     def add_result_meta(self, meta):
         # stores an array of results for playlists and videos
@@ -276,6 +326,18 @@ class StreamWindow(Handy.ApplicationWindow):
 
         meta = self.results_meta[index]
         results_box.setup_stream(meta)
+
+    def add_videos_history_result_meta(self, meta):
+        self.videos_history_results_meta.append(meta)
+        index_meta = len(self.videos_history_results_meta) - 1
+        self.add_videos_history_result(index_meta)
+
+    def add_videos_history_result(self, index):
+        videos_history_result_box = ResultsBox(self)
+        self.videos_history_list.add(videos_history_result_box)
+
+        meta = self.videos_history_results_meta[index]
+        videos_history_result_box.setup_stream(meta)
 
     def add_playlist_result_meta(self, meta):
         # stores an array of results for playlists and videos
@@ -332,7 +394,9 @@ class StreamWindow(Handy.ApplicationWindow):
 #        print("in open primary menu")
 
     def get_scroller_list(self):
-        if self.lists_stack.get_visible_child_name() == "playlist_scroller":
+        if self.history_toggle_button.get_active():
+            return self.videos_history_list
+        elif self.lists_stack.get_visible_child_name() == "playlist_scroller":
             return self.playlist_list
         else:
             return self.results_list
@@ -403,6 +467,7 @@ class StreamWindow(Handy.ApplicationWindow):
     def get_all_flowboxes(self):
         flowboxes = self.results_list.get_children()
         flowboxes.extend(self.playlist_list.get_children())
+        flowboxes.extend(self.videos_history_list.get_children())
         return flowboxes
 
     def pause_all(self, active_window):
@@ -410,8 +475,8 @@ class StreamWindow(Handy.ApplicationWindow):
         for flowbox in flowboxes:
             if flowbox:
                 result_window = flowbox.get_child()
-                if result_window != active_window:
-                    flowbox.get_child().null_out_player()
+                if result_window and result_window != active_window:
+                    result_window.null_out_player()
 
     def inhibit_app(self):
         self.inhibit_cookie = self.application.inhibit(self,
