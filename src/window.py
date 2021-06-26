@@ -19,7 +19,7 @@ import gi
 gi.require_version('Gdk', '3.0')
 gi.require_version('Gtk', '3.0')
 gi.require_version('Handy', '1')
-from gi.repository import Gdk, Gtk, Handy
+from gi.repository import Gdk, GLib, Gtk, Handy
 
 Handy.init()
 
@@ -28,6 +28,8 @@ from .history import HistoryBox
 from .results import ResultsBox
 from .instances import Instances
 
+import json
+
 # plugin style
 from .search import Search
 
@@ -35,6 +37,7 @@ from .search import Search
 class StreamWindow(Handy.ApplicationWindow):
     __gtype_name__ = 'StreamWindow'
 
+    user_data_dir = GLib.get_user_data_dir()
     header_bar = Gtk.Template.Child()
     status_icon = Gtk.Template.Child()
 
@@ -57,6 +60,9 @@ class StreamWindow(Handy.ApplicationWindow):
     history_box = Gtk.Template.Child()
     history_list = Gtk.Template.Child()
     history_toggle_button = Gtk.Template.Child()
+    history_file = f"{user_data_dir}/history.json"
+    history_json = { 'history': [] }
+
 
     # lists stack holds both the scroller ScrollWindow
     # and the playlist_scroller ScrollWindow
@@ -104,8 +110,8 @@ class StreamWindow(Handy.ApplicationWindow):
             Gdk.Screen.get_default(), provider,
             Gtk.STYLE_PROVIDER_PRIORITY_APPLICATION)
 
-#        # this will check if history exists, then show it instead of Status Page
-#        self.show_history_if_exists()
+        # Check if history exists, then show it instead of Status Page
+        self.show_history_if_exists()
 
     @Gtk.Template.Callback()
     def search_toggle(self, toggle_button):
@@ -121,7 +127,7 @@ class StreamWindow(Handy.ApplicationWindow):
         self.search_bar.set_visible(True)
         self.header_bar.set_property('title', "Stream")
 
-        self.search_back_stack.set_visible_child_name("search_toggle_button")
+        self.search_back_stack.set_visible_child_name("search_bar_toggle")
         self.lists_stack.set_visible_child_name("scroller")
 
     # this is called from code and from the ui XML upon
@@ -156,6 +162,9 @@ class StreamWindow(Handy.ApplicationWindow):
 
         self.search_query = search_box.get_text()
 
+        # write to history
+        self.write_history(self.search_query)
+
         if not self.strong_instances:
             self.show_error_box("Service Failure",
                                 "No strong instances found to do search against.")
@@ -187,28 +196,69 @@ class StreamWindow(Handy.ApplicationWindow):
         if self.history_toggle_button.get_active():
             self.main_stack.set_visible_child_name("history_box")
 
-#            # grab history from user history
-#            self.add_history_row("1", "test", "2021-06-19 15:34")
-#            self.add_history_row("2", "this is a really long test I did yesterday or the day before", "2021-06-19 15:33")
+            # grab history from user history
+            try:
+                with open(self.history_file) as file:
+                   self.history_json = json.load(file)
+            except:
+                self.main_stack.set_visible_child_name("status_page")
+
+            for history_box in self.history_list:
+                history_box.destroy()
+
+            # show reverse sorted [::-1] history
+            for history in self.history_json['history'][::-1]:
+                self.add_history_row(history)
 
         else:
             self.history_toggle_button.set_active(True)
 
-
-    def add_history_row(self, history_id, label, datetime):
+    def add_history_row(self, query):
         history_box = HistoryBox(self)
         self.history_list.add(history_box)
-        history_box.history_id.set_label(history_id)
-        history_box.search_term.set_label(label)
-        history_box.search_term.set_tooltip_text(label)
-        history_box.date_time.set_label(datetime)
+        history_box.search_term.set_label(query)
+        history_box.search_term.set_tooltip_text(query)
 
     @Gtk.Template.Callback()
     def history_clear_all(self, button):
         children = self.history_list.get_children()
         for child in children:
-            # delete it from the history file too
-            child.destroy()
+            if child:
+                history_child = child.get_child()
+                if history_child:
+                    history_child.history_row_delete(None)
+
+    def get_history_json(self):
+        try:
+            with open(self.history_file) as file:
+                self.history_json = json.load(file)
+                return True
+        except:
+            return False
+
+    def write_history_json(self):
+        try:
+            with open(self.history_file, 'w') as file:
+                json.dump(self.history_json, file)
+                return(True)
+        except:
+            return False
+
+    def history_json_remove(self, query):
+        if self.get_history_json():
+            # remove old (matching query) if exists
+            if query in self.history_json['history']:
+                self.history_json['history'].remove(query)
+
+        self.write_history_json()
+
+    def write_history(self, query):
+        self.history_json_remove(query)
+
+        # append new query
+        self.history_json['history'].append(query)
+
+        self.write_history_json()
 
     def add_result_meta(self, meta):
         # stores an array of results for playlists and videos

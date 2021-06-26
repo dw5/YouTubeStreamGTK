@@ -24,8 +24,6 @@ class HistoryBox(Gtk.Box):
     __gtype_name__ = 'HistoryBox'
 
     search_term = Gtk.Template.Child()
-    history_id = Gtk.Template.Child()
-    date_time = Gtk.Template.Child()
 
     def __init__(self, app_window, **kwargs):
         super().__init__(**kwargs)
@@ -39,6 +37,5 @@ class HistoryBox(Gtk.Box):
 
     @Gtk.Template.Callback()
     def history_row_delete(self, event):
-        #print(self.history_id.get_label())
+        self.app_window.history_json_remove(self.search_term.get_label())
         self.destroy()
-
