@@ -29,6 +29,7 @@ class Menu(Gtk.PopoverMenu):
 
     volume = Gtk.Template.Child()
     volume_icon = Gtk.Template.Child()
+    mute_button = Gtk.Template.Child()
     speed = Gtk.Template.Child()
 
     mode_switcher = Gtk.Template.Child()

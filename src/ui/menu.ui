@@ -32,7 +32,7 @@
             <property name="visible">True</property>
             <property name="can-focus">False</property>
             <child>
-              <object class="GtkToggleButton" id="volume_button">
+              <object class="GtkToggleButton" id="mute_button">
                 <property name="visible">True</property>
                 <property name="can-focus">True</property>
                 <property name="receives-default">False</property>
