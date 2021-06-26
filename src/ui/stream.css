@@ -38,6 +38,18 @@
   -gtk-outline-radius: 9999px;
 }
 
+.osd-overlay {
+  padding-top: 6px;
+  padding-left: 12px;
+  padding-right: 12px;
+  padding-bottom: 6px;
+  border-radius: 9999px;
+  -gtk-outline-radius: 9999px;
+  color: @theme_text_color;
+  background-color: @theme_base_color;
+  border: 1px solid @borders;
+}
+
 button.rounded-button {
   padding: 4px;
   min-width: 24px;

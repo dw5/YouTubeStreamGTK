@@ -471,6 +471,7 @@ class ResultsBox(Gtk.Box):
                     seek = position - (10 * Gst.SECOND)
                 self.player.seek_simple(Gst.Format.TIME,
                     Gst.SeekFlags.FLUSH | Gst.SeekFlags.KEY_UNIT, seek)
+                self.app_window.osd_display_show("media-seek-backward-symbolic", "-10s")
 
     def forward_keypress(self):
         self.box_grab_focus()
@@ -484,6 +485,7 @@ class ResultsBox(Gtk.Box):
                     seek = position + (10 * Gst.SECOND)
                 self.player.seek_simple(Gst.Format.TIME,
                     Gst.SeekFlags.FLUSH | Gst.SeekFlags.KEY_UNIT, seek)
+                self.app_window.osd_display_show("media-seek-forward-symbolic", "+10s")
 
     def poll_mouse(self):
         now_is = int(GLib.get_current_time())

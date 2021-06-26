@@ -37,6 +37,10 @@ from .search import Search
 class StreamWindow(Handy.ApplicationWindow):
     __gtype_name__ = 'StreamWindow'
 
+    osd_overlay = Gtk.Template.Child()
+    osd_icon = Gtk.Template.Child()
+    osd_label = Gtk.Template.Child()
+
     user_data_dir = GLib.get_user_data_dir()
     header_bar = Gtk.Template.Child()
     status_icon = Gtk.Template.Child()
@@ -317,8 +321,10 @@ class StreamWindow(Handy.ApplicationWindow):
 
     def play_pause_toggle(self, focus_child):
         if self.is_playing:
+            self.osd_display_show("media-playback-pause-symbolic", "Pause")
             focus_child.get_child().pause_button(None)
         else:
+            self.osd_display_show("media-playback-start-symbolic", "Play")
             focus_child.get_child().play_button(None)
 
 #    @Gtk.Template.Callback()
@@ -364,6 +370,8 @@ class StreamWindow(Handy.ApplicationWindow):
                 self.play_pause_toggle(focus_child)
             elif key == "f":
                 self.fullscreen_toggle(focus_child)
+            elif key == "m":
+                self.mute_keypress()
             elif key == "Up":
                 self.volume_up_keypress()
                 return True
@@ -382,6 +390,15 @@ class StreamWindow(Handy.ApplicationWindow):
             elif key == "bracketright":
                 self.speed_faster_keypress()
                 return True
+
+    def osd_display_show(self, icon, label):
+        self.osd_label.set_label(label)
+        self.osd_icon.set_property('icon-name', icon)
+        self.osd_overlay.set_reveal_child(True)
+        GLib.timeout_add_seconds(1, self.osd_display_hide)
+
+    def osd_display_hide(self):
+        self.osd_overlay.set_reveal_child(False)
 
     def get_all_flowboxes(self):
         flowboxes = self.results_list.get_children()
@@ -435,20 +452,32 @@ class StreamWindow(Handy.ApplicationWindow):
         if focus_child:
             focus_child.get_child().box_grab_focus()
 
+    def mute_keypress(self):
+        if self.menu.mute_button.get_active():
+            self.menu.mute_button.set_active(False)
+            current_volume = self.menu.volume.get_value()
+            self.osd_display_show("audio-volume-medium-symbolic", str(int(current_volume)))
+        else:
+            self.menu.mute_button.set_active(True)
+            self.osd_display_show("audio-volume-muted-symbolic", str(0))
+        self.focus_child()
+
     def volume_up_keypress(self):
         current_volume = self.menu.volume.get_value()
         louder = 100
-        if current_volume <= 90:
-            louder = current_volume + 10
+        if current_volume <= 95:
+            louder = current_volume + 5
         self.menu.volume.set_value(louder)
+        self.osd_display_show("audio-volume-medium-symbolic", str(int(louder)))
         self.focus_child()
 
     def volume_down_keypress(self):
         current_volume = self.menu.volume.get_value()
         quieter = 0
-        if current_volume >= 10:
-            quieter = current_volume - 10
+        if current_volume >= 5:
+            quieter = current_volume - 5
         self.menu.volume.set_value(quieter)
+        self.osd_display_show("audio-volume-low-symbolic", str(int(quieter)))
         self.focus_child()
 
     def speed_faster_keypress(self):

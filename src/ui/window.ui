@@ -13,33 +13,89 @@
     <signal name="key-press-event" handler="keypress_listener" swapped="no"/>
     <signal name="size-allocate" handler="screen_changed" swapped="no"/>
     <child>
-      <object class="GtkBox">
+      <object class="GtkOverlay">
         <property name="visible">True</property>
         <property name="can-focus">False</property>
-        <property name="orientation">vertical</property>
         <child>
-          <object class="HdyHeaderBar" id="header_bar">
+          <object class="GtkBox">
             <property name="visible">True</property>
             <property name="can-focus">False</property>
-            <property name="title">Stream</property>
-            <property name="show-close-button">True</property>
+            <property name="orientation">vertical</property>
             <child>
-              <object class="GtkStack" id="search_back_stack">
+              <object class="HdyHeaderBar" id="header_bar">
                 <property name="visible">True</property>
                 <property name="can-focus">False</property>
+                <property name="title">Stream</property>
+                <property name="show-close-button">True</property>
                 <child>
-                  <object class="GtkToggleButton" id="search_bar_toggle">
+                  <object class="GtkStack" id="search_back_stack">
+                    <property name="visible">True</property>
+                    <property name="can-focus">False</property>
+                    <child>
+                      <object class="GtkToggleButton" id="search_bar_toggle">
+                        <property name="visible">True</property>
+                        <property name="can-focus">True</property>
+                        <property name="tooltip-text" translatable="yes">Search</property>
+                        <property name="valign">center</property>
+                        <property name="active">True</property>
+                        <signal name="clicked" handler="search_toggle" swapped="no"/>
+                        <child>
+                          <object class="GtkImage">
+                            <property name="visible">True</property>
+                            <property name="can-focus">False</property>
+                            <property name="icon-name">edit-find-symbolic</property>
+                            <property name="icon_size">1</property>
+                          </object>
+                        </child>
+                        <style>
+                          <class name="image-button"/>
+                        </style>
+                      </object>
+                      <packing>
+                        <property name="name">search_bar_toggle</property>
+                      </packing>
+                    </child>
+                    <child>
+                      <object class="GtkButton" id="back_button">
+                        <property name="visible">True</property>
+                        <property name="can-focus">True</property>
+                        <property name="tooltip-text" translatable="yes">Back</property>
+                        <property name="valign">center</property>
+                        <signal name="clicked" handler="back_navigate" swapped="no"/>
+                        <child>
+                          <object class="GtkImage" id="back_icon">
+                            <property name="visible">True</property>
+                            <property name="can-focus">False</property>
+                            <property name="icon-name">go-previous-symbolic</property>
+                            <property name="icon_size">1</property>
+                            <style>
+                              <class name="image-button"/>
+                            </style>
+                          </object>
+                        </child>
+                      </object>
+                      <packing>
+                        <property name="name">back_button</property>
+                      </packing>
+                    </child>
+                  </object>
+                  <packing>
+                    <property name="pack-type">start</property>
+                    <property name="position">1</property>
+                  </packing>
+                </child>
+                <child>
+                  <object class="GtkToggleButton" id="history_toggle_button">
                     <property name="visible">True</property>
                     <property name="can-focus">True</property>
-                    <property name="tooltip-text" translatable="yes">Search</property>
+                    <property name="tooltip-text" translatable="yes">History</property>
                     <property name="valign">center</property>
-                    <property name="active">True</property>
-                    <signal name="clicked" handler="search_toggle" swapped="no"/>
+                    <signal name="clicked" handler="history_toggle" swapped="no"/>
                     <child>
                       <object class="GtkImage">
                         <property name="visible">True</property>
                         <property name="can-focus">False</property>
-                        <property name="icon-name">edit-find-symbolic</property>
+                        <property name="icon-name">emblem-documents-symbolic</property>
                         <property name="icon_size">1</property>
                       </object>
                     </child>
@@ -48,159 +104,103 @@
                     </style>
                   </object>
                   <packing>
-                    <property name="name">search_bar_toggle</property>
+                    <property name="pack-type">start</property>
+                    <property name="position">2</property>
                   </packing>
                 </child>
                 <child>
-                  <object class="GtkButton" id="back_button">
+                  <object class="GtkStack" id="status_stack">
                     <property name="visible">True</property>
-                    <property name="can-focus">True</property>
-                    <property name="tooltip-text" translatable="yes">Back</property>
-                    <property name="valign">center</property>
-                    <signal name="clicked" handler="back_navigate" swapped="no"/>
+                    <property name="can-focus">False</property>
                     <child>
-                      <object class="GtkImage" id="back_icon">
+                      <object class="GtkImage" id="status_icon">
                         <property name="visible">True</property>
                         <property name="can-focus">False</property>
-                        <property name="icon-name">go-previous-symbolic</property>
+                        <property name="icon-name">content-loading-symbolic</property>
                         <property name="icon_size">1</property>
                         <style>
-                          <class name="image-button"/>
+                          <class name="status-icon"/>
                         </style>
                       </object>
+                      <packing>
+                        <property name="name">status_icon</property>
+                      </packing>
+                    </child>
+                    <child>
+                      <object class="GtkSpinner" id="status_spinner">
+                        <property name="visible">True</property>
+                        <property name="can-focus">True</property>
+                        <property name="halign">center</property>
+                        <property name="valign">center</property>
+                        <property name="active">True</property>
+                      </object>
+                      <packing>
+                        <property name="name">status_spinner</property>
+                      </packing>
                     </child>
                   </object>
                   <packing>
-                    <property name="name">back_button</property>
+                    <property name="pack-type">end</property>
+                    <property name="position">2</property>
                   </packing>
                 </child>
-              </object>
-              <packing>
-                <property name="pack-type">start</property>
-                <property name="position">1</property>
-              </packing>
-            </child>
-            <child>
-              <object class="GtkToggleButton" id="history_toggle_button">
-                <property name="visible">True</property>
-                <property name="can-focus">True</property>
-                <property name="tooltip-text" translatable="yes">History</property>
-                <property name="valign">center</property>
-                <signal name="clicked" handler="history_toggle" swapped="no"/>
                 <child>
-                  <object class="GtkImage">
+                  <object class="GtkMenuButton" id="menu_button">
                     <property name="visible">True</property>
-                    <property name="can-focus">False</property>
-                    <property name="icon-name">emblem-documents-symbolic</property>
-                    <property name="icon_size">1</property>
-                  </object>
-                </child>
-                <style>
-                  <class name="image-button"/>
-                </style>
-              </object>
-              <packing>
-                <property name="pack-type">start</property>
-                <property name="position">2</property>
-              </packing>
-            </child>
-            <child>
-              <object class="GtkStack" id="status_stack">
-                <property name="visible">True</property>
-                <property name="can-focus">False</property>
-                <child>
-                  <object class="GtkImage" id="status_icon">
-                    <property name="visible">True</property>
-                    <property name="can-focus">False</property>
-                    <property name="icon-name">content-loading-symbolic</property>
-                    <property name="icon_size">1</property>
+                    <property name="can-focus">True</property>
+                    <property name="tooltip-text" translatable="yes">Menu</property>
+                    <child>
+                      <object class="GtkImage">
+                        <property name="visible">True</property>
+                        <property name="can-focus">False</property>
+                        <property name="icon-name">open-menu-symbolic</property>
+                      </object>
+                    </child>
                     <style>
-                      <class name="status-icon"/>
+                      <class name="image-button"/>
                     </style>
                   </object>
                   <packing>
-                    <property name="name">status_icon</property>
+                    <property name="pack-type">end</property>
+                    <property name="position">1</property>
                   </packing>
-                </child>
-                <child>
-                  <object class="GtkSpinner" id="status_spinner">
-                    <property name="visible">True</property>
-                    <property name="can-focus">True</property>
-                    <property name="halign">center</property>
-                    <property name="valign">center</property>
-                    <property name="active">True</property>
-                  </object>
-                  <packing>
-                    <property name="name">status_spinner</property>
-                  </packing>
-                </child>
-              </object>
-              <packing>
-                <property name="pack-type">end</property>
-                <property name="position">2</property>
-              </packing>
-            </child>
-            <child>
-              <object class="GtkMenuButton" id="menu_button">
-                <property name="visible">True</property>
-                <property name="can-focus">True</property>
-                <property name="tooltip-text" translatable="yes">Menu</property>
-                <child>
-                  <object class="GtkImage">
-                    <property name="visible">True</property>
-                    <property name="can-focus">False</property>
-                    <property name="icon-name">open-menu-symbolic</property>
-                  </object>
                 </child>
                 <style>
-                  <class name="image-button"/>
+                  <class name="titlebar"/>
                 </style>
               </object>
               <packing>
-                <property name="pack-type">end</property>
+                <property name="expand">False</property>
+                <property name="fill">True</property>
+                <property name="position">0</property>
+              </packing>
+            </child>
+            <child>
+              <object class="HdySearchBar" id="search_bar">
+                <property name="visible">True</property>
+                <property name="can-focus">False</property>
+                <property name="search-mode-enabled">True</property>
+                <child>
+                  <object class="GtkSearchEntry" id="search_entry_box">
+                    <property name="visible">True</property>
+                    <property name="can-focus">True</property>
+                    <property name="has-focus">True</property>
+                    <property name="halign">center</property>
+                    <property name="width-request">332</property>
+                    <property name="primary-icon-name">edit-find-symbolic</property>
+                    <property name="primary-icon-activatable">False</property>
+                    <property name="primary-icon-sensitive">False</property>
+                    <signal name="activate" handler="search_entry" swapped="no"/>
+                    <signal name="delete-text" handler="clear_results" swapped="no"/>
+                  </object>
+                </child>
+              </object>
+              <packing>
+                <property name="expand">False</property>
+                <property name="fill">True</property>
                 <property name="position">1</property>
               </packing>
             </child>
-            <style>
-              <class name="titlebar"/>
-            </style>
-          </object>
-          <packing>
-            <property name="expand">False</property>
-            <property name="fill">True</property>
-            <property name="position">0</property>
-          </packing>
-        </child>
-        <child>
-          <object class="HdySearchBar" id="search_bar">
-            <property name="visible">True</property>
-            <property name="can-focus">False</property>
-            <property name="search-mode-enabled">True</property>
-            <child>
-              <object class="GtkSearchEntry" id="search_entry_box">
-                <property name="visible">True</property>
-                <property name="can-focus">True</property>
-                <property name="has-focus">True</property>
-                <property name="halign">center</property>
-                <property name="width-request">332</property>
-                <property name="primary-icon-name">edit-find-symbolic</property>
-                <property name="primary-icon-activatable">False</property>
-                <property name="primary-icon-sensitive">False</property>
-                <signal name="activate" handler="search_entry" swapped="no"/>
-                <signal name="delete-text" handler="clear_results" swapped="no"/>
-              </object>
-            </child>
-          </object>
-          <packing>
-            <property name="expand">False</property>
-            <property name="fill">True</property>
-            <property name="position">1</property>
-          </packing>
-        </child>
-        <child>
-          <object class="GtkOverlay">
-            <property name="visible">True</property>
-            <property name="can-focus">False</property>
             <child>
               <object class="GtkStack" id="main_stack">
                 <property name="visible">True</property>
@@ -503,6 +503,77 @@
               </object>
             </child>
           </object>
+        </child>
+        <child type="overlay">
+          <object class="GtkBox">
+            <property name="visible">True</property>
+            <property name="sensitive">False</property>
+            <property name="can-focus">False</property>
+            <property name="halign">center</property>
+            <property name="valign">center</property>
+            <child>
+              <object class="GtkRevealer" id="osd_overlay">
+                <property name="visible">True</property>
+                <property name="can-focus">False</property>
+                <property name="transition-type">crossfade</property>
+                <property name="transition-duration">500</property>
+                <property name="reveal-child">False</property>
+                <child>
+                  <object class="GtkBox">
+                    <property name="visible">True</property>
+                    <property name="can-focus">False</property>
+                    <child>
+                      <object class="GtkImage" id="osd_icon">
+                        <property name="visible">True</property>
+                        <property name="can-focus">False</property>
+                        <property name="halign">start</property>
+                        <property name="margin-end">12</property>
+                        <property name="icon-name">content-loading-symbolic</property>
+                        <property name="icon_size">3</property>
+                        <style>
+                          <class name="osd-overlay-icon"/>
+                        </style>
+                      </object>
+                      <packing>
+                        <property name="expand">False</property>
+                        <property name="fill">True</property>
+                        <property name="position">0</property>
+                      </packing>
+                    </child>
+                    <child>
+                      <object class="GtkLabel" id="osd_label">
+                        <property name="width-request">48</property>
+                        <property name="visible">True</property>
+                        <property name="can-focus">False</property>
+                        <property name="opacity">0.80</property>
+                        <property name="halign">start</property>
+                        <property name="valign">center</property>
+                        <property name="label" translatable="yes">...</property>
+                        <attributes>
+                          <attribute name="scale" value="1.80000000000000004"/>
+                        </attributes>
+                        <style>
+                          <class name="osd-overlay-text"/>
+                        </style>
+                      </object>
+                      <packing>
+                        <property name="expand">True</property>
+                        <property name="fill">True</property>
+                        <property name="position">1</property>
+                      </packing>
+                    </child>
+                    <style>
+                      <class name="osd-overlay"/>
+                    </style>
+                  </object>
+                </child>
+              </object>
+            </child>
+          </object>
+          <packing>
+            <property name="pass-through">True</property>
+            <property name="index">3</property>
+          </packing>
         </child>
       </object>
     </child>
