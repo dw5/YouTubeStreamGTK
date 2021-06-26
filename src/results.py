@@ -213,7 +213,7 @@ class ResultsBox(Gtk.Box):
 
                 if int(position / Gst.SECOND) >= int(duration / Gst.SECOND):
                     GLib.timeout_add(500, self.null_out_player)
-                    GLib.timeout_add(700, self.app_window.next_playback_action)
+                    GLib.timeout_add(1200, self.app_window.next_playback_action)
 
                 try:
                     # block seek slider function so it doesn't loop itself
